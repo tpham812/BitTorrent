@@ -51,6 +51,7 @@ public class RUBTClient {
 			trackerUrlString = new String(trackerUrlByte.array(),"ASCII");
 		} catch (UnsupportedEncodingException e) {
 			System.out.println("Error: Could not convert Tracker's URL Byte Array into STring");
+			return;
 		}
 		System.out.println("Tracker's url:" +trackerUrlString);
 		
