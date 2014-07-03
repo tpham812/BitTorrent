@@ -1,18 +1,21 @@
 package BitTorrent;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
 public class RUBTClient {
 
+	static TorrentInfo torrentI; 
+	
 	public static void main(String[] args) {
 		
 		if (args.length!=2){
@@ -28,6 +31,10 @@ public class RUBTClient {
 		}
 		//open torrent file and parse data using torrentInfo.java...
 		File torrent_file = new File(args[0].trim());
+		if(!torrent_file.exists()) {
+			System.out.println("Error: File not found.");
+			return;
+		}
 		byte[] torrentFile = new byte[(int)torrent_file.length()];
 		try { //converts file into byte array
 			torrentFile = Files.readAllBytes(torrent_file.toPath());
@@ -36,7 +43,7 @@ public class RUBTClient {
 			return;
 		}
 		
-		TorrentInfo torrentI; 
+		
 		try { //creates torrentinfo object
 			torrentI = new TorrentInfo(torrentFile);
 		} catch (BencodingException e) {
@@ -46,33 +53,56 @@ public class RUBTClient {
 		
 		Map<ByteBuffer,Object> torrentmeta = torrentI.torrent_file_map;
 		
-		ByteBuffer trackerUrlByte = (ByteBuffer)torrentmeta.get(TorrentInfo.KEY_ANNOUNCE);
+		ByteBuffer trackerURLByte = (ByteBuffer)torrentmeta.get(TorrentInfo.KEY_ANNOUNCE);
 		HashMap info = (HashMap)torrentmeta.get(TorrentInfo.KEY_INFO);
 		//get tracker url and info metadata 
-		String trackerUrlString="";
+		String trackerURLString="";
 		try {
-			trackerUrlString = new String(trackerUrlByte.array(),"ASCII");
+			trackerURLString = new String(trackerURLByte.array(),"ASCII");
+			
 		} catch (UnsupportedEncodingException e) {
-			System.out.println("Error: Could not convert Tracker's URL Byte Array into STring");
+			System.out.println("Error: Could not convert Tracker's URL Byte Array into String.");
 			return;
 		}
 		//System.out.println("Tracker's url:" +trackerUrlString);
 		
 		URL trackerURL;
 		try {
-			trackerURL = new URL(trackerUrlString);
+			trackerURL = new URL(trackerURLString);
 		} catch (MalformedURLException e) {
-			System.out.println("Error: Could not convert from string to tracker url");
+			System.out.println("Error: Could not convert from string to tracker url.");
 			return;
 		}
-		sendMessagetoTracker(trackerURL);
-		
-		
-		
+		sendMessagetoTracker();
 	}
 
-	private static void sendMessagetoTracker(URL trackerURL) {
+	/* ????????????????????????????????????????????????????????????????????????????????????????????????????????????????*/
+	private static Object sendMessagetoTracker() {
 		
+		
+		
+		String sentURL = torrentI.announce_url.toString();
+		String infoHash;
+		String peerID;
+		String port = "6881";
+		String uploaded = "0", downloaded = "0";
+		String left = "" + torrentI.file_length;
+		
+		
+		
+		HttpURLConnection connection = null;
+		try {
+			connection = (HttpURLConnection) new URL(sentURL).openConnection();
+		} catch (IOException e) {
+			System.out.println("Error: Could not connect to tracker");
+			return null;
+		}
+		try {
+			DataInputStream trackerResponse = new DataInputStream(connection.getInputStream());
+		} catch (IOException e) {
+			System.out.println("Error: Cannot get tracker response.");
+			return null;
+		}
 		
 	}
 
