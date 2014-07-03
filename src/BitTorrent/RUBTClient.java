@@ -3,6 +3,8 @@ package BitTorrent;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Dictionary;
@@ -34,7 +36,7 @@ public class RUBTClient {
 			return;
 		}
 		
-		TorrentInfo torrentI;
+		TorrentInfo torrentI; 
 		try { //creates torrentinfo object
 			torrentI = new TorrentInfo(torrentFile);
 		} catch (BencodingException e) {
@@ -46,6 +48,7 @@ public class RUBTClient {
 		
 		ByteBuffer trackerUrlByte = (ByteBuffer)torrentmeta.get(TorrentInfo.KEY_ANNOUNCE);
 		HashMap info = (HashMap)torrentmeta.get(TorrentInfo.KEY_INFO);
+		//get tracker url and info metadata 
 		String trackerUrlString="";
 		try {
 			trackerUrlString = new String(trackerUrlByte.array(),"ASCII");
@@ -53,9 +56,22 @@ public class RUBTClient {
 			System.out.println("Error: Could not convert Tracker's URL Byte Array into STring");
 			return;
 		}
-		System.out.println("Tracker's url:" +trackerUrlString);
+		//System.out.println("Tracker's url:" +trackerUrlString);
 		
-		//URL trackerURL = new URL(trackerUrlString);
+		URL trackerURL;
+		try {
+			trackerURL = new URL(trackerUrlString);
+		} catch (MalformedURLException e) {
+			System.out.println("Error: Could not convert from string to tracker url");
+			return;
+		}
+		sendMessagetoTracker(trackerURL);
+		
+		
+		
+	}
+
+	private static void sendMessagetoTracker(URL trackerURL) {
 		
 		
 	}
