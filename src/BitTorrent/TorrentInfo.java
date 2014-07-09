@@ -179,16 +179,6 @@ public class TorrentInfo
 			digest.update(info_bytes.array());
 			byte[] info_hash = digest.digest();
 			this.info_hash = ByteBuffer.wrap(info_hash);
-			//asdfjkaj !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			String infoHash="";
-			try {
-				infoHash= URLEncoder.encode((new String(this.info_hash.array())),"ISO-8859-1");
-			} catch (UnsupportedEncodingException e) {
-				System.out.println("Error: oh no");
-				
-			}
-			System.out.println("infoHashIN TORRENTINFO:"+infoHash);
-			//asdfjkaj !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		}
 		catch(NoSuchAlgorithmException nsae)
 		{
