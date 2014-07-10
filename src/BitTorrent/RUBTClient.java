@@ -27,6 +27,7 @@ public class RUBTClient {
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
 	public final static ByteBuffer KEY_PEER_PORT = ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
+	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]{'p', 'e', 'e', 'r', ' ', 'i', 'd'});
 
 	public static void main(String[] args) throws NoSuchAlgorithmException, BencodingException, UnsupportedEncodingException, MalformedURLException {
 
@@ -80,9 +81,8 @@ public class RUBTClient {
 		for(int i=0;i<l.size();i++){
 			HashMap peer_map = (HashMap)l.get(i);
 			System.out.println(new String(((ByteBuffer)peer_map.get(KEY_PEER_IP)).array()));
-
+			System.out.println(new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array()));
 		}
-
 	}
 	/**
 	 * Takes file and turns it into byte array
