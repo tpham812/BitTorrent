@@ -1,7 +1,9 @@
 package BitTorrent;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -16,7 +18,7 @@ import java.util.Map;
 public class ConnectToTracker {
 
 	
-	
+	private String finalMessage;
 	private HttpURLConnection connection;
 	private TorrentInfo torrentI; 
 	private ByteBuffer infoHash;
@@ -36,6 +38,7 @@ public class ConnectToTracker {
 	}
 	public void getTrackerResponse(File torrent_file) {
 
+		DataOutputStream toTracker;
 		HashMap peer_map;
 		HashMap trackerAnswer;
 		String peerIP = "", peerID = "";
@@ -56,7 +59,8 @@ public class ConnectToTracker {
 		infoHash = torrentI.info_hash; 
 
 		try {
-			sendMessagetoTracker();
+			sendMessageToTracker();
+			toTracker = new DataOutputStream(connection.getOutputStream());
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
@@ -88,7 +92,7 @@ public class ConnectToTracker {
 				}
 				System.out.println("Getting new list");
 				try {
-					sendMessagetoTracker();
+				//	toTracker.writeBytes(finalMessage);
 					trackerAnswer = getMessageFromTracker();
 				} catch (Exception e) {
 					System.out.println("Error: tracker message could not be obtained.");
@@ -96,10 +100,6 @@ public class ConnectToTracker {
 				}
 			}
 		}while(!found);
-	
-
-
-
 	}
 
 	/**
@@ -110,7 +110,7 @@ public class ConnectToTracker {
 	 * @throws BencodingException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private void sendMessagetoTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
+	private void sendMessageToTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
 		//tracker URL = URL of tracker obtained from announce in torrent metadata.
 		//peerID = 20 string length of alphanumeric = randomized each time
 		//port is 6881 -> 6889 
@@ -120,7 +120,7 @@ public class ConnectToTracker {
 		int portNumber = 6880;
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();
-		String finalMessage;
+		
 		String uploaded = "0", downloaded = "0";
 		String left = "" + torrentI.file_length;
 		String event = "started";
@@ -160,6 +160,4 @@ public class ConnectToTracker {
 		}
 		return tracker_decoded_response;
 	}
-	
 }
-
