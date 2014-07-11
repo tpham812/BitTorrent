@@ -15,8 +15,13 @@ import java.util.Map;
 
 public class ConnectToTracker {
 
-	static TorrentInfo torrentI; 
-	static ByteBuffer infoHash;
+	
+	
+	private HttpURLConnection connection;
+	private TorrentInfo torrentI; 
+	private ByteBuffer infoHash;
+	BufferedInputStream trackerResponse;
+	ByteArrayOutputStream temp_output;
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
 	public final static ByteBuffer KEY_PEER_PORT = ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
@@ -24,17 +29,23 @@ public class ConnectToTracker {
 
 	public ConnectToTracker(File torrent_file) {
 
+		connection = null;
+		torrentI = null;
+		infoHash = null;
 		getTrackerResponse(torrent_file);
 	}
 	public void getTrackerResponse(File torrent_file) {
 
+		HashMap peer_map;
 		HashMap trackerAnswer;
-		HttpURLConnection connection;
+		String peerIP = "", peerID = "";
+		boolean found = false;
+		int peerPort = 0;
 
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); //get byte array of file
 		try { //creates torrentinfo object and stores other stuff
 			torrentI = new TorrentInfo(torrentFile);
-		} catch (BencodingException e) {
+		} catch (Exception e) {
 			System.out.println("Error: Could not create torrentinfo object.");
 			return;
 		}
@@ -45,19 +56,48 @@ public class ConnectToTracker {
 		infoHash = torrentI.info_hash; 
 
 		try {
-			connection = sendMessagetoTracker();
-			trackerAnswer = getMessageFromTracker(connection);
+			sendMessagetoTracker();
+			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 			return;
 		}
+		do {
+			ArrayList list = (ArrayList)trackerAnswer.get(KEY_PEERS);
 
-		ArrayList l = (ArrayList)trackerAnswer.get(KEY_PEERS);
-		for(int i=0;i<l.size();i++){
-			HashMap peer_map = (HashMap)l.get(i);
-			System.out.println(new String(((ByteBuffer)peer_map.get(KEY_PEER_IP)).array()));
-			System.out.println(new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array()));
-		}
+			
+			for(int i = 0; i < list.size(); i++){
+				peer_map = (HashMap)list.get(i);
+				peerIP = new String(((ByteBuffer)peer_map.get(KEY_PEER_IP)).array());
+				peerID = new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array());
+				peerPort = (int)peer_map.get(KEY_PEER_PORT);	
+				System.out.println(peerID);
+				System.out.println(peerIP);
+				/*if(peerIP.equals("128.6.171.130") && peerID.contains("RU1103")) {
+					found = true;
+					break;
+				}*/
+			}
+			if(!found) {
+				try {
+					Thread.sleep(5000);
+				} catch (Exception e) {
+					System.out.println("Error: Thread is unable to sleep for 5 secs");
+					connection.disconnect();
+					return;
+				}
+				System.out.println("Getting new list");
+				try {
+					sendMessagetoTracker();
+					trackerAnswer = getMessageFromTracker();
+				} catch (Exception e) {
+					System.out.println("Error: tracker message could not be obtained.");
+					return;
+				}
+			}
+		}while(!found);
+	
+
 
 
 	}
@@ -70,14 +110,13 @@ public class ConnectToTracker {
 	 * @throws BencodingException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private HttpURLConnection sendMessagetoTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
+	private void sendMessagetoTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
 		//tracker URL = URL of tracker obtained from announce in torrent metadata.
 		//peerID = 20 string length of alphanumeric = randomized each time
 		//port is 6881 -> 6889 
 		//0 bytes uploaded and downloaded.
 		//left = length of file
 		//event = starting = first request must hav this. stopped = if client shutting down, completed = if have complete download\
-		HttpURLConnection connection = null;
 		int portNumber = 6880;
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();
@@ -92,18 +131,16 @@ public class ConnectToTracker {
 					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event; 
 			try {
 				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				System.out.println("Error: Could not connect to tracker");
-				return null;
+				return;
 			}
 		}while(connection == null);
-
-		return connection;
-		
 	}
+
 	
-	private HashMap getMessageFromTracker(HttpURLConnection connection) {
-		
+	public HashMap getMessageFromTracker() {
+
 		//get tracker response, decode it and extract list of peers and their ids.
 		HashMap tracker_decoded_response = null;
 		try {
@@ -123,4 +160,6 @@ public class ConnectToTracker {
 		}
 		return tracker_decoded_response;
 	}
+	
 }
+
