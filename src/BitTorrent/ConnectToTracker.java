@@ -98,6 +98,7 @@ public class ConnectToTracker {
 				}
 			}
 		}while(!found);
+		connection.disconnect();
 		
 		Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
 	}
