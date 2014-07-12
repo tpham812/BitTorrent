@@ -38,7 +38,6 @@ public class ConnectToTracker {
 	}
 	public void getTrackerResponse(File torrent_file) {
 
-		DataOutputStream toTracker;
 		HashMap peer_map;
 		HashMap trackerAnswer;
 		String peerIP = "", peerID = "";
@@ -60,7 +59,6 @@ public class ConnectToTracker {
 
 		try {
 			sendMessageToTracker();
-			toTracker = new DataOutputStream(connection.getOutputStream());
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
@@ -92,7 +90,7 @@ public class ConnectToTracker {
 				}
 				System.out.println("Getting new list");
 				try {
-				//	toTracker.writeBytes(finalMessage);
+					sendMessageToTracker();
 					trackerAnswer = getMessageFromTracker();
 				} catch (Exception e) {
 					System.out.println("Error: tracker message could not be obtained.");
