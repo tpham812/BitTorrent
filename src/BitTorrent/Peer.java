@@ -55,7 +55,7 @@ public class Peer {
 			fileoutput.close();
 		} catch (Exception e) {
 			System.out.println("Error: Could not close data streams!");
-			System.exit(0);//??????????KEEP THIS?!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			return;
 		}
 
 	}
@@ -201,7 +201,6 @@ public class Peer {
 		if (socket==null){ //bad host name given.
 			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
 			finishConnection();
-			System.exit(1);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!CAN DO OR NOT??!??????????????????
 		}
 
 		try { //initiate handshake and get reply
