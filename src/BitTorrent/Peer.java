@@ -37,7 +37,7 @@ public class Peer {
 
 
 	} 
-	public Peer(String ip, int port, byte[] id, String fileOutArg){
+	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException{
 		this.IP = ip;
 		this.port = port;
 		this.torrentInfo = ConnectToTracker.torrentI;
@@ -63,8 +63,8 @@ public class Peer {
 
 	}
 	
-	private void downloadFileFromPeer() {
-		Message interested = new Message();//NEED INTERESTED MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	private void downloadFileFromPeer() throws IOException {
+		Message interested = new Message(1,(byte)2);
 		byte[] chunk;
 		byte[] tempBuff;
 		int numChunks = 0;
@@ -72,7 +72,7 @@ public class Peer {
 		int requestIndex = 16384; //typical length asked
 		int left;
 		int lastSize;
-		int total = 0;
+		int curr = 0;
 		/*Three things hav payload = have, piece and request
 		 * byte[] pieceBlock, int pieceBegin, pieceIndex, requesting Length,
 		 * requesting Begin, requesting Index, havePayload
@@ -91,7 +91,7 @@ public class Peer {
 			in.readByte();
 		}//get rid of
 		
-		os.write(interested);//////////////////////////////////////////////////////////////////////
+		os.write(interested.message);
 		os.flush();//clear output
 		
 		for (int j =0; j<5; j++ ){
@@ -126,8 +126,8 @@ public class Peer {
 						requestIndex = 16384;
 					}
 					lastSize = lastSize-requestIndex; 
-					//payload for 
-					os.write(askforPieces);
+					askForPieces.payload(requestIndex,curr,numChunks);
+					os.write(askForPieces.message);
 					os.flush();
 					tempBuff = new byte[4];
 					for (int k = 0; k<4;k++){
@@ -147,8 +147,8 @@ public class Peer {
 					
 				}else{ //still have more pieces left!
 					askForPieces = new Message(13,(byte)6); 
-					//payload stuff??!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					os.write(askforPieces);
+					askForPieces.payload(requestIndex,curr,numChunks);
+					os.write(askForPieces.message);
 					os.flush();
 					tempBuff = new byte[4];
 					for (int k = 0; k<4;k++){
@@ -163,12 +163,12 @@ public class Peer {
 					}//read in chunk
 					this.chunks.add(chunk); //add to array
 					fileoutput.write(chunk); //write to file
-					if (total+requestIndex==torrentInfo.piece_length){
+					if (curr+requestIndex==torrentInfo.piece_length){
 						numChunks++;
-						total = 0;
+						curr = 0;
 						break;
 					}else{
-						total +=requestIndex;
+						curr +=requestIndex;
 					}	
 				}			
 		}
@@ -232,37 +232,6 @@ public class Peer {
 	public String toString(){
 		String peerInfo = "Peer Information:" + peerID +  ", " + IP + ", " + port; 
 		return peerInfo;
-	}
-
-
-	public byte readMessage() throws IOException{
-		byte id = in.readByte();
-		int msgLength = in.readInt();
-
-		//keep-alive
-		if(msgLength == 0){
-			return -1;
-		}
-
-		switch(id){
-		//0: choke
-		//1: unchoke
-		//2: interested
-		//3: not interested
-		//4: have 
-		//5: bitfield
-		//6: request
-		case 0-6: return id;
-		//7: piece
-		case 7: 
-			int index = in.readInt();
-			int begin = in.readInt();
-			//8: cancel	
-		case 8: return id;	
-		default: break;
-		}
-		return 0;
-
 	}
 
 
