@@ -169,19 +169,9 @@ public class Peer {
 						break;
 					}else{
 						total +=requestIndex;
-					}
-					
-					
-					
-				}
-			
-			
-
-			
+					}	
+				}			
 		}
-		
-		
-		
 	}
 	
 	public void handShake(){
@@ -207,7 +197,7 @@ public class Peer {
 		}
 
 		try { //initiate handshake and get reply
-			os.write(message);
+			os.write(message); 
 			os.flush();
 
 			byte[] peerAns = new byte[68];
