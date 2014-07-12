@@ -100,7 +100,11 @@ public class ConnectToTracker {
 		}while(!found);
 		connection.disconnect();
 		
-		Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
+		try {
+			Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
+		} catch (Exception e) {
+			System.out.println("Error: Cannot create Peer.");
+		}
 	}
 
 	/**
