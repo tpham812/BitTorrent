@@ -126,7 +126,7 @@ public class Peer {
 						requestIndex = 16384;
 					}
 					lastSize = lastSize-requestIndex; 
-					askForPieces.payload(requestIndex,curr,numChunks);
+					askForPieces.setPayload(requestIndex,curr,numChunks);
 					os.write(askForPieces.message);
 					os.flush();
 					tempBuff = new byte[4];
@@ -147,7 +147,7 @@ public class Peer {
 					
 				}else{ //still have more pieces left!
 					askForPieces = new Message(13,(byte)6); 
-					askForPieces.payload(requestIndex,curr,numChunks);
+					askForPieces.setPayload(requestIndex,curr,numChunks);
 					os.write(askForPieces.message);
 					os.flush();
 					tempBuff = new byte[4];
