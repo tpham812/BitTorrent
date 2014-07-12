@@ -2,6 +2,7 @@ package BitTorrent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,7 @@ public class Peer {
 	byte[] infoHash;
 	String IP;
 	int port;
+	String fileOutArg;
 	byte[] peerID;
 	String ourID;
 	FileOutputStream fileoutput;
@@ -35,12 +37,13 @@ public class Peer {
 
 
 	} 
-	public Peer(String ip, int port, TorrentInfo torrentInfo, byte[] id){
+	public Peer(String ip, int port, byte[] id, String fileOutArg){
 		this.IP = ip;
 		this.port = port;
-		this.torrentInfo = torrentInfo;
+		this.torrentInfo = ConnectToTracker.torrentI;
 		this.peerID = id;
 		this.infoHash = torrentInfo.info_hash.array();
+		this.fileOutArg = fileOutArg;
 		handShake();
 		downloadFileFromPeer();
 		finishConnection();
@@ -102,7 +105,7 @@ public class Peer {
 		
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
-		fileoutput = new FileOutputStream(new File(outFileArg));
+		fileoutput = new FileOutputStream(new File(this.fileOutArg));
 		
 		
 		while (numChunks!=torrentInfo.piece_hashes.length){//loop till we have all pieces
