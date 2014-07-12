@@ -50,7 +50,7 @@ public class Peer {
 	}
 
 	private void finishConnection() {
-		
+
 		try {
 			socket.close();
 			in.close();
@@ -62,7 +62,7 @@ public class Peer {
 		}
 
 	}
-	
+
 	private void downloadFileFromPeer() throws IOException {
 		Message interested = new Message(1,(byte)2);
 		byte[] chunk;
@@ -86,14 +86,14 @@ public class Peer {
 		 * same(requesting lenght) from 13,4)
 		 * 
 		 * */
-		
+
 		for (int i = 0; i<6;i++){
 			in.readByte();
 		}//get rid of
-		
+
 		os.write(interested.message);
 		os.flush();//clear output
-		
+
 		for (int j =0; j<5; j++ ){
 			if (j == 4){
 				if (in.readByte()==1){ //not being chocked
@@ -102,12 +102,12 @@ public class Peer {
 			}
 			in.readByte();
 		}
-		
+
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
 		fileoutput = new FileOutputStream(new File(this.fileOutArg));
-		
-		
+
+
 		while (numChunks!=torrentInfo.piece_hashes.length){//loop till we have all pieces
 			//askForPieces = new Message(13,(byte)6); //13 is for requesting for pieces = First thing =length
 			//id = 6 and then we need index, begin and length
@@ -116,64 +116,64 @@ public class Peer {
 			//this method takes value and shifts >> 24, 16, and 8 for each byte. and returns byte[4]
 			//used for big endian hex value.
 			//message[4] = (byte)6;
-			
-				if (numChunks+1 ==torrentInfo.piece_hashes.length){ //LAST PIECES
-					askForPieces = new Message(13,(byte)6); 
-					
-					if (lastSize<requestIndex){
-						requestIndex = lastSize;
-					}else{
-						requestIndex = 16384;
-					}
-					lastSize = lastSize-requestIndex; 
-					askForPieces.setPayload(requestIndex,curr,numChunks);
-					os.write(askForPieces.message);
-					os.flush();
-					tempBuff = new byte[4];
-					for (int k = 0; k<4;k++){
-						tempBuff[k]=in.readByte();
-					}
-					chunk = new byte[requestIndex];
-					for (int l = 0; l<9;l++){
-						in.readByte();
-					}
-					
-					for (int m = 0 ; m<requestIndex;m++){
-						chunk[m]=in.readByte(); 
-					}//read in chunk
-					
-					this.chunks.add(chunk); //add to array
-					fileoutput.write(chunk); //write to file
-					
-				}else{ //still have more pieces left!
-					askForPieces = new Message(13,(byte)6); 
-					askForPieces.setPayload(requestIndex,curr,numChunks);
-					os.write(askForPieces.message);
-					os.flush();
-					tempBuff = new byte[4];
-					for (int k = 0; k<4;k++){
-						tempBuff[k]=in.readByte();
-					}
-					chunk = new byte[requestIndex];
-					for (int l = 0; l<9;l++){
-						in.readByte();
-					}
-					for (int m = 0 ; m<requestIndex;m++){
-						chunk[m]=in.readByte(); 
-					}//read in chunk
-					this.chunks.add(chunk); //add to array
-					fileoutput.write(chunk); //write to file
-					if (curr+requestIndex==torrentInfo.piece_length){
-						numChunks++;
-						curr = 0;
-						break;
-					}else{
-						curr +=requestIndex;
-					}	
-				}			
+
+			if (numChunks+1 ==torrentInfo.piece_hashes.length){ //LAST PIECES
+				askForPieces = new Message(13,(byte)6); 
+
+				if (lastSize<requestIndex){
+					requestIndex = lastSize;
+				}else{
+					requestIndex = 16384;
+				}
+				lastSize = lastSize-requestIndex; 
+				askForPieces.setPayload(requestIndex,curr,numChunks);
+				os.write(askForPieces.message);
+				os.flush();
+				tempBuff = new byte[4];
+				for (int k = 0; k<4;k++){
+					tempBuff[k]=in.readByte();
+				}
+				chunk = new byte[requestIndex];
+				for (int l = 0; l<9;l++){
+					in.readByte();
+				}
+
+				for (int m = 0 ; m<requestIndex;m++){
+					chunk[m]=in.readByte(); 
+				}//read in chunk
+
+				this.chunks.add(chunk); //add to array
+				fileoutput.write(chunk); //write to file
+
+			}else{ //still have more pieces left!
+				askForPieces = new Message(13,(byte)6); 
+				askForPieces.setPayload(requestIndex,curr,numChunks);
+				os.write(askForPieces.message);
+				os.flush();
+				tempBuff = new byte[4];
+				for (int k = 0; k<4;k++){
+					tempBuff[k]=in.readByte();
+				}
+				chunk = new byte[requestIndex];
+				for (int l = 0; l<9;l++){
+					in.readByte();
+				}
+				for (int m = 0 ; m<requestIndex;m++){
+					chunk[m]=in.readByte(); 
+				}//read in chunk
+				this.chunks.add(chunk); //add to array
+				fileoutput.write(chunk); //write to file
+				if (curr+requestIndex==torrentInfo.piece_length){
+					numChunks++;
+					curr = 0;
+					break;
+				}else{
+					curr +=requestIndex;
+				}	
+			}			
 		}
 	}
-	
+
 	public void handShake(){
 		//construct message to send to peer.
 		byte[] message = new byte[68];
@@ -210,14 +210,11 @@ public class Peer {
 					break;
 				}		
 			}
-			
+
 
 		} catch (IOException e) {
 			System.out.println("Error: Could not handshake with peer.");
 		}
-
-
-
 
 
 	}

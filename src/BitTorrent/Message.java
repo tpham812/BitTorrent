@@ -1,7 +1,6 @@
 package BitTorrent;
 
 public class Message {
-	
 	public static final byte MSG_KEEP_ALIVE = -1;
 	public static final byte MSG_CHOKE = 0;
 	public static final byte MSG_UNCHOKE = 1;
@@ -12,78 +11,63 @@ public class Message {
 	public static final byte MSG_REQUEST = 6;
 	public static final byte MSG_PIECE = 7;
 	public static final byte MSG_CANCEL = 8;
-	
-	
-	
- 	public final byte id;
+	public final byte id;
 	public int lengthPrefix;
- 	public byte[] message;
-    public byte[] info_hash;
-    public byte[] peerID;
-    public byte[] piece;
+	public byte[] message;
 
-    
-    
-    public Message (int lengthPrefix, byte msgID){
+
+	public Message (int lengthPrefix, byte msgID){
 		this.lengthPrefix = lengthPrefix;
 		this.id = msgID;
 		this.message = new byte[this.lengthPrefix + 4];
-		
 		switch(id){
 		case MSG_CHOKE:
-			//create byte array
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 0;
 		case MSG_UNCHOKE:
-			//create byte array
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 1;
 		case MSG_KEEP_ALIVE:
-			//create byte array
+			//empty
 		case MSG_INTERESTED:
-			//create byte array
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 2;
 		case MSG_NOT_INTERESTED:
-			//create byte array
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 3;
 		case MSG_HAVE:
-			//create byte array
-			//has payload, add this in
-		case MSG_BITFIELD: 
-			//create byte array
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 4;
 		case MSG_REQUEST: 
-			//create byte array
-			//has payload
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 6;
 		case MSG_PIECE:
-			//create byte array
-			//has payload
-		case MSG_CANCEL:
-			//create byte array	
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			this.message[4] = (byte) 7;
 		}
-		
-		
-//error checking needed to make sure there are correct bytes for messages.
-//all other messages besides HAVE, REQUEST, and PIECE, have no payload
-		
 	}
-    public byte[] getPayload() throws Exception {
-        byte[] payload = null;
-        if (id == MSG_HAVE  || id == MSG_REQUEST || id == MSG_PIECE) {
-        if (id == MSG_HAVE) {
-        payload = new byte[4];
-        System.arraycopy(this.message, 5, payload, 0, 4);
-        return payload;
 
-        } else if (id == MSG_PIECE) {
-        payload = new byte[this.lengthPrefix - 1];
-        System.arraycopy(this.message, 5, payload, 0,
-        this.lengthPrefix - 1);
-        return payload;
+	public void setPayload(int requestIndex, int currentDL, int numChunks) {
 
-        } else {
-        // request message
-        payload = new byte[12];
-        System.arraycopy(this.message, 5, payload, 0, 12);
-        return payload;
-        }
-        } else {
-        throw new Exception("No payload for this type of message.");
-        }
-    }   
-	
-	
+		if (id == MSG_HAVE) {
+			System.arraycopy(Helper.intToByteArray(4), 0,message, 5, 4);
+		} else if (id == MSG_PIECE) {
+
+			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4); 
+			System.arraycopy(null, 0, message, 13, lengthPrefix-9);
+
+		} else if (id == MSG_REQUEST) {
+
+			System.arraycopy(Helper.intToByteArray(numChunks),0,message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4);
+			System.arraycopy(Helper.intToByteArray(requestIndex), 0,message, 13, 4);
+
+
+		} else {
+			System.out.println("Error: Payload requested for wrong message id type. Payload can only be done for have, pieces and request ids only.");
+
+		}
+		return;
+	}
 }
