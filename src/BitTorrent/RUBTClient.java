@@ -43,6 +43,6 @@ public class RUBTClient {
 			System.out.println("Error: File not found.");
 			return;
 		}
-		ConnectToTracker ct = new ConnectToTracker(torrent_file);		
+		ConnectToTracker ct = new ConnectToTracker(torrent_file, args[2]);		
 	}
 }

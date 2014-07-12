@@ -20,7 +20,7 @@ public class ConnectToTracker {
 	
 	private String finalMessage;
 	private HttpURLConnection connection;
-	private TorrentInfo torrentI; 
+	public static TorrentInfo torrentI; 
 	private ByteBuffer infoHash;
 	BufferedInputStream trackerResponse;
 	ByteArrayOutputStream temp_output;
@@ -29,16 +29,16 @@ public class ConnectToTracker {
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]{'p', 'e', 'e', 'r', ' ', 'i', 'd'});
 
-	public ConnectToTracker(File torrent_file) {
+	public ConnectToTracker(File torrent_file, String file) {
 
 		connection = null;
 		torrentI = null;
 		infoHash = null;
-		getTrackerResponse(torrent_file);
+		getTrackerResponse(torrent_file, file);
 	}
-	public void getTrackerResponse(File torrent_file) {
+	public void getTrackerResponse(File torrent_file, String file) {
 
-		HashMap peer_map;
+		HashMap peer_map = null;
 		HashMap trackerAnswer;
 		String peerIP = "", peerID = "";
 		boolean found = false;
@@ -98,6 +98,8 @@ public class ConnectToTracker {
 				}
 			}
 		}while(!found);
+		
+		Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
 	}
 
 	/**
