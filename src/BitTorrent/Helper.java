@@ -27,7 +27,7 @@ public class Helper {
 		}
 		return b;
 	}
-	
+
 	/**
 	 * Formats a given string into ISO-8859-1 convention and returns a string.
 	 * @param s string to format
@@ -44,7 +44,7 @@ public class Helper {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * Generates random ISO formatted, 20 length, alphanumeric string
 	 * @return ISO formatted peer ID that does not start with RUBT
@@ -64,5 +64,14 @@ public class Helper {
 		}while (peerID.startsWith("RUBT"));
 		return escape(peerID);
 
+	}
+
+	public static byte[] intToByteArray(int value) {
+		byte[] returnValue = new byte[4];
+		returnValue[0] = (byte) (value >> 24);
+		returnValue[1] = (byte) (value >> 16);
+		returnValue[2] = (byte) (value >> 8);
+		returnValue[3] = (byte) (value);
+		return returnValue;
 	}
 }

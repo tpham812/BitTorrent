@@ -60,6 +60,30 @@ public class Message {
 //all other messages besides HAVE, REQUEST, and PIECE, have no payload
 		
 	}
+    public byte[] getPayload() throws Exception {
+        byte[] payload = null;
+        if (id == MSG_HAVE  || id == MSG_REQUEST || id == MSG_PIECE) {
+        if (id == MSG_HAVE) {
+        payload = new byte[4];
+        System.arraycopy(this.message, 5, payload, 0, 4);
+        return payload;
+
+        } else if (id == MSG_PIECE) {
+        payload = new byte[this.lengthPrefix - 1];
+        System.arraycopy(this.message, 5, payload, 0,
+        this.lengthPrefix - 1);
+        return payload;
+
+        } else {
+        // request message
+        payload = new byte[12];
+        System.arraycopy(this.message, 5, payload, 0, 12);
+        return payload;
+        }
+        } else {
+        throw new Exception("No payload for this type of message.");
+        }
+    }   
 	
 	
 }
