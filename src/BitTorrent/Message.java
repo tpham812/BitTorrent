@@ -22,27 +22,27 @@ public class Message {
 		this.message = new byte[this.lengthPrefix + 4];
 		switch(id){
 		case MSG_CHOKE:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 0;
 		case MSG_UNCHOKE:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 1;
 		case MSG_KEEP_ALIVE:
 			//empty
 		case MSG_INTERESTED:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 2;
 		case MSG_NOT_INTERESTED:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 3;
 		case MSG_HAVE:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 4;
 		case MSG_REQUEST: 
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 6;
 		case MSG_PIECE:
-			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(1), 0, this.message, 0, 4);
 			this.message[4] = (byte) 7;
 		}
 	}

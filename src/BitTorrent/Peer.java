@@ -37,7 +37,7 @@ public class Peer {
 
 
 	} 
-	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException{
+	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException, InterruptedException{
 		this.IP = ip;
 		this.port = port;
 		this.torrentInfo = ConnectToTracker.torrentI;
@@ -63,12 +63,12 @@ public class Peer {
 
 	}
 
-	private void downloadFileFromPeer() throws IOException {
-		Message interested = new Message(1,(byte)2);
+	private void downloadFileFromPeer() throws IOException, InterruptedException {
+		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
 		int numChunks = 0;
-		Message askForPieces;
+		Message askForPieces; //ask for more chunks
 		int requestIndex = 16384; //typical length asked
 		int left;
 		int lastSize;
@@ -86,22 +86,23 @@ public class Peer {
 		 * same(requesting lenght) from 13,4)
 		 * 
 		 * */
+		
 
-		for (int i = 0; i<6;i++){
-			in.readByte();
-		}//get rid of
+		//for (int i = 0; i<6;i++){
+			//in.readByte();
+		//}//gets rid of the first int and byte in the beginning = sees what type of message it is.
 
 		os.write(interested.message);
-		os.flush();//clear output
+		os.flush();//push message to stream
 
-		for (int j =0; j<5; j++ ){
+		/*for (int j =0; j<5; j++ ){
 			if (j == 4){
 				if (in.readByte()==1){ //not being chocked
 					break;
 				}
 			}
 			in.readByte();
-		}
+		}*/
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -148,15 +149,24 @@ public class Peer {
 			}else{ //still have more pieces left!
 				askForPieces = new Message(13,(byte)6); 
 				askForPieces.setPayload(requestIndex,curr,numChunks);
+				
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!WHAT IS MESSAGE RETURNING?@@@
 				os.write(askForPieces.message);
-				os.flush();
-				tempBuff = new byte[4];
+				os.flush(); //push to output stream.
+
+
+				
+				System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
+				tempBuff = new byte[4];  //read in first four bytes which we don't use
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
 				}
-				chunk = new byte[requestIndex];
+				
+				System.out.println("Get here in line 165.");
+
+				chunk = new byte[requestIndex]; //create 16384 size chunk
 				for (int l = 0; l<9;l++){
-					in.readByte();
+					System.out.println(in.readByte());
 				}
 				for (int m = 0 ; m<requestIndex;m++){
 					chunk[m]=in.readByte(); 
@@ -198,19 +208,37 @@ public class Peer {
 
 		try { //initiate handshake and get reply
 			os.write(message); 
-			os.flush();
+			os.flush(); //writes message out to stream 
 
-			byte[] peerAns = new byte[68];
-			in.readFully(peerAns);
-			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48);
+			
+			byte[] peerAns = new byte[68];   //get peer reply
+			in.readFully(peerAns); //has to read in 68 bytes else error thrown + stores into peerAns
+		
+			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
+			//checks if peer's info hash returned is same as info has we have from tracker
+			boolean peerInfoGood = false;
 			for (int i = 0; i<20;i++){
 				if (peerInfoHash[i]!=infoHash[i]){
 					System.out.println("Error: Peer's info hash returned from handshake is not same.");
 					finishConnection();
+					peerInfoGood = false;
 					break;
 				}		
 			}
-
+			//check if peer id is same as the tracker given peer id!!!
+			byte[] peerIDCheck = Arrays.copyOfRange(peerAns, 48, 68);
+			for (int n = 0; n <20;n++){
+				if (peerID[n]!=peerIDCheck[n]){
+					System.out.println("Error: Peer id is not same as given from tracker.");
+					finishConnection();
+					peerInfoGood = false;
+					break;
+				}
+			}
+			//if peer info given does not match as tracker's given, exit (already closed connections before).
+			if (peerInfoGood==false){
+				return;
+			}
 
 		} catch (IOException e) {
 			System.out.println("Error: Could not handshake with peer.");

@@ -74,11 +74,11 @@ public class ConnectToTracker {
 				peerID = new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array());
 				peerPort = (int)peer_map.get(KEY_PEER_PORT);	
 				System.out.println(peerID);
-				System.out.println(peerIP);
-				/*if(peerIP.equals("128.6.171.130") && peerID.contains("RU1103")) {
+				//System.out.println(peerIP);
+				if(peerIP.equals("128.6.171.130") && peerID.contains("RU1103")) {
 					found = true;
 					break;
-				}*/
+				}
 			}
 			if(!found) {
 				try {
@@ -103,7 +103,8 @@ public class ConnectToTracker {
 		try {
 			Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
 		} catch (Exception e) {
-			System.out.println("Error: Cannot create Peer.");
+			e.printStackTrace();
+			//System.out.println("Error: Cannot create Peer.");
 		}
 	}
 
