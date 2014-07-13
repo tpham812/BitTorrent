@@ -76,10 +76,9 @@ public class Peer {
 		int curr = 0;
 
 		int read = readMessage();
-		if ((read==5)||(read==4)){
-			System.out.println("YAY = get bitfield message! line: 95 in peer.java");
+		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
+			//part 1 = only have bit field message due to one peer with everything only. 
 		}
-		System.out.println("readMessage: "+read);
 
 		os.write(interested.message);
 		os.flush();//push message to stream
@@ -89,6 +88,7 @@ public class Peer {
 			in.readByte();	//unchoked so proceed
 			System.out.println("choking or not: "+read);
 		}
+		System.out.println("Read" +read);
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -235,30 +235,17 @@ public class Peer {
 	public byte readMessage() throws IOException{
 		int msgLength = in.readInt();
 		byte id = in.readByte();
-
 		//keep-alive
 		if(msgLength == 0){
 			return -1;
 		}
-
 		switch(id){
-		//0: choke
-		//1: unchoke
-		//2: interested
-		//3: not interested
-		//4: have 
-		//5: bitfield
-		//6: request
-		case 0-6: return id;
-		//7: piece
 		case 7: 
 			int index = in.readInt();
 			int begin = in.readInt();
-			//8: cancel	
-		case 8: return id;	
-		default: break;
+			//8: cancel		
+		default: return id;
 		}
-		return 0;
 	}
 
 
