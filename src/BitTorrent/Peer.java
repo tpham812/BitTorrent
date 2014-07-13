@@ -65,7 +65,7 @@ public class Peer {
 	}
 
 	private void downloadFileFromPeer() throws IOException, InterruptedException {
-		Message unChokeRequest = new Message(1,(byte)2); //create message that you are interested 
+		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
 		int numChunks = 0;
@@ -80,7 +80,7 @@ public class Peer {
 			//part 1 = only have bit field message due to one peer with everything only. 
 		}
 
-		os.write(unChokeRequest.message);
+		os.write(interested.message);
 		os.flush();//push message to stream
 		
 		read = readMessage();
