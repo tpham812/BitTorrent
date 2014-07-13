@@ -68,12 +68,12 @@ public class Peer {
 		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
-		int numChunks = 0;
+		int block = 0;
 		Message askForPieces; //ask for more chunks
-		int requestIndex = torrentInfo.piece_length; //typical length of piece
+		int index = torrentInfo.piece_length; //typical length of piece
 		int left;
 		int lastSize;
-		int curr = 0;
+		int begin = 0;
 
 		int read = readMessage();
 		byte[] bitField = new byte[in.available()];
@@ -88,46 +88,39 @@ public class Peer {
 		read = readMessage();
 		if (read == 1){
 			in.readByte();	//unchoked so proceed
-			System.out.println("not chocked: "+read);
+			//System.out.println("not chocked: "+read);
 		}
-		System.out.println("Read " +read);
+		//System.out.println("Read " +read);
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
 		fileoutput = new FileOutputStream(new File(this.fileOutArg));
 
 
-		while (numChunks!=torrentInfo.piece_hashes.length){//loop till we have all pieces
-			//askForPieces = new Message(13,(byte)6); //13 is for requesting for pieces = First thing =length
-			//id = 6 and then we need index, begin and length
-			//message = new byte[13+4] for other 4 things
-			//System.arrayCopy(intToByteArray(13),0,message,0,4);
-			//this method takes value and shifts >> 24, 16, and 8 for each byte. and returns byte[4]
-			//used for big endian hex value.
-			//message[4] = (byte)6;
+		while (block!=torrentInfo.piece_hashes.length){
 
-			if (numChunks+1 ==torrentInfo.piece_hashes.length){ //LAST PIECES
+			if (block+1 ==torrentInfo.piece_hashes.length){ //LAST PIECES
 				askForPieces = new Message(13,(byte)6); 
 
-				if (lastSize<requestIndex){
-					requestIndex = lastSize;
+				if (lastSize<index){
+					index = lastSize;
 				}else{
-					requestIndex = torrentInfo.piece_length;
+					index = torrentInfo.piece_length;
 				}
-				lastSize = lastSize-requestIndex; 
-				askForPieces.setPayload(requestIndex,curr,numChunks);
+				lastSize = lastSize-index; 
+				askForPieces.setPayload(index,begin,block);
 				os.write(askForPieces.message);
 				os.flush();
 				tempBuff = new byte[4];
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
 				}
-				chunk = new byte[requestIndex];
+				chunk = new byte[index];
 				for (int l = 0; l<9;l++){
 					in.readByte();
 				}
 
-				for (int m = 0 ; m<requestIndex;m++){
+				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
 				}//read in chunk
 
@@ -136,9 +129,9 @@ public class Peer {
 
 			}else{ //still have more pieces left!
 				askForPieces = new Message(13,(byte)6); 
-				askForPieces.setPayload(requestIndex,curr,numChunks);
+				askForPieces.setPayload(index,begin,block);
 
-				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!WHAT IS MESSAGE RETURNING?@@@
+
 				os.write(askForPieces.message);
 				os.flush(); //push to output stream.
 
@@ -151,21 +144,21 @@ public class Peer {
 
 				System.out.println("Get here in line 165.");
 
-				chunk = new byte[requestIndex]; //create piece length size chunk
+				chunk = new byte[index]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
 				//	System.out.println(in.readByte());
 				}
-				for (int m = 0 ; m<requestIndex;m++){
+				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
 				}//read in chunk
 				this.chunks.add(chunk); //add to array
 				fileoutput.write(chunk); //write to file
-				if (curr+requestIndex==torrentInfo.piece_length){
-					numChunks++;
-					curr = 0;
+				if (begin+index==torrentInfo.piece_length){
+					block++;
+					begin = 0;
 					break;
 				}else{
-					curr +=requestIndex;
+					begin +=index;
 				}	
 			}			
 		}
