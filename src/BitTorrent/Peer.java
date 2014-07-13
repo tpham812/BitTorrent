@@ -74,7 +74,7 @@ public class Peer {
 		int left;
 		int lastSize;
 		int begin = 0;
-
+		
 		int read = readMessage();
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
@@ -84,7 +84,7 @@ public class Peer {
 
 		os.write(interested.message);
 		os.flush();//push message to stream
-		
+
 		read = readMessage();
 		if (read == 1){
 			in.readByte();	//unchoked so proceed
@@ -96,10 +96,11 @@ public class Peer {
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
 		fileoutput = new FileOutputStream(new File(this.fileOutArg));
 
-
+		//System.out.println("Lenght: "+torrentInfo.piece_hashes.length);
 		while (block!=torrentInfo.piece_hashes.length){
-
-			if (block+1 ==torrentInfo.piece_hashes.length){ //LAST PIECES
+			System.out.println("index, begin, block: "+index+","+begin+","+block);
+			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECES
+				System.out.println("GETTING TO LAST BLOCK!!!");
 				askForPieces = new Message(13,(byte)6); 
 
 				if (lastSize<index){
@@ -126,6 +127,7 @@ public class Peer {
 
 				this.chunks.add(chunk); //add to array
 				fileoutput.write(chunk); //write to file
+				block++;
 
 			}else{ //still have more pieces left!
 				askForPieces = new Message(13,(byte)6); 
@@ -136,17 +138,17 @@ public class Peer {
 				os.flush(); //push to output stream.
 
 
-			//	System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
+				//	System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
 				tempBuff = new byte[4];  //read in first four bytes which we don't use
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
 				}
 
-				System.out.println("Get here in line 165.");
+			//	System.out.println("Get here in line 165.");
 
 				chunk = new byte[index]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
-				//	System.out.println(in.readByte());
+					in.readByte();
 				}
 				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
@@ -156,7 +158,7 @@ public class Peer {
 				if (begin+index==torrentInfo.piece_length){
 					block++;
 					begin = 0;
-					break;
+					//break;
 				}else{
 					begin +=index;
 				}	
