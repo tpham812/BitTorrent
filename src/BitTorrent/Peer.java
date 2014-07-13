@@ -76,8 +76,10 @@ public class Peer {
 		int curr = 0;
 
 		int read = readMessage();
+		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
 			//part 1 = only have bit field message due to one peer with everything only. 
+			in.readFully(bitField); //get rid of bit field
 		}
 
 		os.write(interested.message);
@@ -86,9 +88,9 @@ public class Peer {
 		read = readMessage();
 		if (read == 1){
 			in.readByte();	//unchoked so proceed
-			System.out.println("choking or not: "+read);
+			System.out.println("not chocked: "+read);
 		}
-		System.out.println("Read" +read);
+		System.out.println("Read " +read);
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -141,7 +143,7 @@ public class Peer {
 				os.flush(); //push to output stream.
 
 
-				System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
+			//	System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
 				tempBuff = new byte[4];  //read in first four bytes which we don't use
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
@@ -151,7 +153,7 @@ public class Peer {
 
 				chunk = new byte[requestIndex]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
-					System.out.println(in.readByte());
+				//	System.out.println(in.readByte());
 				}
 				for (int m = 0 ; m<requestIndex;m++){
 					chunk[m]=in.readByte(); 
@@ -235,6 +237,7 @@ public class Peer {
 	public byte readMessage() throws IOException{
 		int msgLength = in.readInt();
 		byte id = in.readByte();
+
 		//keep-alive
 		if(msgLength == 0){
 			return -1;

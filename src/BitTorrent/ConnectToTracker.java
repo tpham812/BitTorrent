@@ -74,7 +74,7 @@ public class ConnectToTracker {
 				peerIP = new String(((ByteBuffer)peer_map.get(KEY_PEER_IP)).array());
 				peerID = new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array());
 				peerPort = (int)peer_map.get(KEY_PEER_PORT);	
-				System.out.println(peerID);
+				//System.out.println(peerID);
 				//System.out.println(peerIP);
 				if(peerIP.equals("128.6.171.130") && peerID.contains("RU1103")) {
 					found = true;
