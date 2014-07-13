@@ -69,7 +69,7 @@ public class Peer {
 		byte[] tempBuff;
 		int numChunks = 0;
 		Message askForPieces; //ask for more chunks
-		int requestIndex = 16384; //typical length asked
+		int requestIndex = torrentInfo.piece_length; //typical length of piece
 		int left;
 		int lastSize;
 		int curr = 0;
@@ -86,15 +86,27 @@ public class Peer {
 		 * same(requesting lenght) from 13,4)
 		 * 
 		 * */
+		int ansLength;  //after interested method, reply sent by peer.
+		byte ansID; 
+		ansLength = in.readInt();
+		ansID = in.readByte(); //if this is 5 = bitfield message = normal for part 1
+		//if four then have.
+		if (ansID==5){
+			System.out.println("YAY = get bitfield message! line: 95 in peer.java");
+		}
 		
-
 		//for (int i = 0; i<6;i++){
 			//in.readByte();
 		//}//gets rid of the first int and byte in the beginning = sees what type of message it is.
-
+		
 		os.write(interested.message);
 		os.flush();//push message to stream
 
+		ansLength = in.readInt();
+		ansID = in.readByte();
+		if (ansID == 1){
+			in.readByte();	//unchoked so 
+		}
 		/*for (int j =0; j<5; j++ ){
 			if (j == 4){
 				if (in.readByte()==1){ //not being chocked
@@ -124,7 +136,7 @@ public class Peer {
 				if (lastSize<requestIndex){
 					requestIndex = lastSize;
 				}else{
-					requestIndex = 16384;
+					requestIndex = torrentInfo.piece_length;
 				}
 				lastSize = lastSize-requestIndex; 
 				askForPieces.setPayload(requestIndex,curr,numChunks);
@@ -164,7 +176,7 @@ public class Peer {
 				
 				System.out.println("Get here in line 165.");
 
-				chunk = new byte[requestIndex]; //create 16384 size chunk
+				chunk = new byte[requestIndex]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
 					System.out.println(in.readByte());
 				}
