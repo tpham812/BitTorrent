@@ -24,7 +24,7 @@ public class Peer {
 	int port;
 	String fileOutArg;
 	byte[] peerID;
-	String ourID;
+	byte[] ourID;
 	FileOutputStream fileoutput;
 	ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
@@ -44,6 +44,7 @@ public class Peer {
 		this.peerID = id;
 		this.infoHash = torrentInfo.info_hash.array();
 		this.fileOutArg = fileOutArg;
+		this.ourID=ConnectToTracker.toSendToPeerID;
 		handShake();
 		downloadFileFromPeer();
 		finishConnection();
@@ -73,48 +74,21 @@ public class Peer {
 		int left;
 		int lastSize;
 		int curr = 0;
-		/*Three things hav payload = have, piece and request
-		 * byte[] pieceBlock, int pieceBegin, pieceIndex, requesting Length,
-		 * requesting Begin, requesting Index, havePayload
-		 * if have then we need to arraycopy inttoByteArray(have payload), 0, message, 5,4
-		 * if it's piece then copy the inttobytearray(pieceIndex) to message from 5,4)
-		 * then do same for piece begin from 9 to 4.
-		 * then add the piece block from 13 to the length -9; (see peer lenghts at beginnig of string)
-		 * if request then 
-		 * intobytearray(requestIndex) from 5 to 4
-		 * same (requesting begin) from 9 to 4
-		 * same(requesting lenght) from 13,4)
-		 * 
-		 * */
-		int ansLength;  //after interested method, reply sent by peer.
-		byte ansID; 
-		ansLength = in.readInt();
-		ansID = in.readByte(); //if this is 5 = bitfield message = normal for part 1
-		//if four then have.
-		if (ansID==5){
+
+		int read = readMessage();
+		if ((read==5)||(read==4)){
 			System.out.println("YAY = get bitfield message! line: 95 in peer.java");
 		}
-		
-		//for (int i = 0; i<6;i++){
-			//in.readByte();
-		//}//gets rid of the first int and byte in the beginning = sees what type of message it is.
-		
+		System.out.println("readMessage: "+read);
+
 		os.write(interested.message);
 		os.flush();//push message to stream
-
-		ansLength = in.readInt();
-		ansID = in.readByte();
-		if (ansID == 1){
-			in.readByte();	//unchoked so 
+		
+		read = readMessage();
+		if (read == 1){
+			in.readByte();	//unchoked so proceed
+			System.out.println("choking or not: "+read);
 		}
-		/*for (int j =0; j<5; j++ ){
-			if (j == 4){
-				if (in.readByte()==1){ //not being chocked
-					break;
-				}
-			}
-			in.readByte();
-		}*/
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -161,19 +135,18 @@ public class Peer {
 			}else{ //still have more pieces left!
 				askForPieces = new Message(13,(byte)6); 
 				askForPieces.setPayload(requestIndex,curr,numChunks);
-				
+
 				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!WHAT IS MESSAGE RETURNING?@@@
 				os.write(askForPieces.message);
 				os.flush(); //push to output stream.
 
 
-				
 				System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
 				tempBuff = new byte[4];  //read in first four bytes which we don't use
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
 				}
-				
+
 				System.out.println("Get here in line 165.");
 
 				chunk = new byte[requestIndex]; //create piece length size chunk
@@ -203,7 +176,7 @@ public class Peer {
 		System.arraycopy(BitProtocol, 0,message,1,19);
 		System.arraycopy(eightZeros, 0, message, 20, 8);
 		System.arraycopy(infoHash,0, message, 28, 20);
-		System.arraycopy(peerID, 0, message, 48, 20);
+		System.arraycopy(ourID, 0, message, 48, 20);
 
 		try {//open connections
 			socket = new Socket(IP,port);
@@ -222,10 +195,10 @@ public class Peer {
 			os.write(message); 
 			os.flush(); //writes message out to stream 
 
-			
+
 			byte[] peerAns = new byte[68];   //get peer reply
 			in.readFully(peerAns); //has to read in 68 bytes else error thrown + stores into peerAns
-		
+
 			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
 			//checks if peer's info hash returned is same as info has we have from tracker
 			boolean peerInfoGood = false;
@@ -258,10 +231,34 @@ public class Peer {
 
 
 	}
-	//sets Peer ID to to a random string
-	public String setOurID(){
-		ourID = Helper.generateRandomPeerID();
-		return ourID;
+
+	public byte readMessage() throws IOException{
+		int msgLength = in.readInt();
+		byte id = in.readByte();
+
+		//keep-alive
+		if(msgLength == 0){
+			return -1;
+		}
+
+		switch(id){
+		//0: choke
+		//1: unchoke
+		//2: interested
+		//3: not interested
+		//4: have 
+		//5: bitfield
+		//6: request
+		case 0-6: return id;
+		//7: piece
+		case 7: 
+			int index = in.readInt();
+			int begin = in.readInt();
+			//8: cancel	
+		case 8: return id;	
+		default: break;
+		}
+		return 0;
 	}
 
 

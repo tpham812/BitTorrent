@@ -24,6 +24,7 @@ public class ConnectToTracker {
 	private ByteBuffer infoHash;
 	BufferedInputStream trackerResponse;
 	ByteArrayOutputStream temp_output;
+	static byte[] toSendToPeerID;
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
 	public final static ByteBuffer KEY_PEER_PORT = ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
@@ -126,7 +127,7 @@ public class ConnectToTracker {
 		int portNumber = 6880;
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();
-		
+		toSendToPeerID = peerID.getBytes();
 		String uploaded = "0", downloaded = "0";
 		String left = "" + torrentI.file_length;
 		String event = "started";
