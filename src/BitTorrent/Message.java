@@ -1,6 +1,7 @@
 package BitTorrent;
 
 public class Message {
+	
 	private static final byte MSG_KEEP_ALIVE = -1;
 	private static final byte MSG_CHOKE = 0;
 	private static final byte MSG_UNCHOKE = 1;
