@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -101,7 +103,23 @@ public class Peer {
 				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
 				}//read in chunk
-
+				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
+                MessageDigest digest = null;
+				try {
+					digest = MessageDigest.getInstance("SHA-1");
+				} catch (NoSuchAlgorithmException e) {
+					
+				}
+                digest.update(chunk);
+                byte[] chunkHash = digest.digest();
+                if (trackerHash.length!=chunkHash.length){
+                    System.out.println("Error: SHA-1 lengths are not same!");
+                }
+                for (int d = 0; d<chunkHash.length;d++){
+                    if (chunkHash[d]!=trackerHash[d]){
+                        System.out.println("Error: Hashes are not same!");
+                    }
+                }
 				this.chunks.add(chunk); //add to array
 				fileoutput.write(chunk); //write to file
 				block++;
@@ -126,6 +144,22 @@ public class Peer {
 				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
 				}//read in chunk
+				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
+                MessageDigest digest = null;
+				try {
+					digest = MessageDigest.getInstance("SHA-1");
+				} catch (Exception e) {
+				}
+                digest.update(chunk);
+                byte[] chunkHash = digest.digest();
+                if (trackerHash.length!=chunkHash.length){
+                    System.out.println("Error: SHA-1 lengths are not same!");
+                }
+                for (int d = 0; d<chunkHash.length;d++){
+                    if (chunkHash[d]!=trackerHash[d]){
+                        System.out.println("Error: Hashes are not same!");
+                    }
+                }
 				this.chunks.add(chunk); //add to array
 				fileoutput.write(chunk); //write to file
 				if (begin+index==torrentInfo.piece_length){
