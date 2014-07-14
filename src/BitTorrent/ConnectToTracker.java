@@ -69,12 +69,7 @@ public class ConnectToTracker {
 	 * @throws NoSuchAlgorithmException
 	 */
 	private void sendMessageToTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
-		//tracker URL = URL of tracker obtained from announce in torrent metadata.
-		//peerID = 20 string length of alphanumeric = randomized each time
-		//port is 6881 -> 6889 
-		//0 bytes uploaded and downloaded.
-		//left = length of file
-		//event = starting = first request must hav this. stopped = if client shutting down, completed = if have complete download\
+		
 		int portNumber = 6880;
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();

@@ -21,19 +21,19 @@ public class Peer {
 	private byte[] infoHash;
 	private String IP;
 	private int port;
-	private String fileOutArg;
-	private byte[] peerID;
+	private byte[] ID;
 	private byte[] ourID;
+	private String fileOutArg;
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
-	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException, InterruptedException{
+	public Peer(String ip, String id, int port, String fileOutArg) throws IOException, InterruptedException{
 		
 		this.IP = ip;
+		this.ID = id.getBytes();
 		this.port = port;
 		this.torrentInfo = ConnectToTracker.torrentI;
-		this.peerID = id;
 		this.infoHash = torrentInfo.info_hash.array();
 		this.fileOutArg = fileOutArg;
 		this.ourID = ConnectToTracker.toSendToPeerID;
@@ -189,7 +189,7 @@ public class Peer {
 			//check if peer id is same as the tracker given peer id!!!
 			byte[] peerIDCheck = Arrays.copyOfRange(peerAns, 48, 68);
 			for (int n = 0; n <20;n++){
-				if (peerID[n]!=peerIDCheck[n]){
+				if (ID[n]!=peerIDCheck[n]){
 					System.out.println("Error: Peer id is not same as given from tracker.");
 					finishConnection();
 					peerInfoGood = false;

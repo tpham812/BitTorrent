@@ -75,7 +75,7 @@ public class RUBTClient {
 		}while(!found);
 		ct.disconnect();
 		try {
-			Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), fileName);
+			Peer peer = new Peer(peerIP, peerID, peerPort, fileName);
 			peer.downloadFileFromPeer();
 		} catch (Exception e) {
 			System.out.println("Error: Cannot create Peer.");
