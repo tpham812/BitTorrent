@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class ConnectToTracker {
 	
@@ -35,8 +34,6 @@ public class ConnectToTracker {
 			System.out.println("Error: Could not create torrentinfo object.");
 			return null;
 		}
-
-		Map<ByteBuffer,Object> torrentmeta = torrentI.torrent_file_map; //gets the map from the object
 
 		infoHash = torrentI.info_hash; 
 

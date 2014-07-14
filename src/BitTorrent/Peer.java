@@ -14,33 +14,33 @@ import java.util.Arrays;
 public class Peer {
 
 	private Socket socket;
+	private FileOutputStream fileoutput;
 	private DataOutputStream os;
 	private DataInputStream in;
-	private OutputStream output;
-	TorrentInfo torrentInfo;
-	private InputStream input;
-	byte[] infoHash;
-	String IP;
-	int port;
-	String fileOutArg;
-	byte[] peerID;
-	byte[] ourID;
-	FileOutputStream fileoutput;
-	ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	final byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
-	final byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
+	private TorrentInfo torrentInfo;
+	private byte[] infoHash;
+	private String IP;
+	private int port;
+	private String fileOutArg;
+	private byte[] peerID;
+	private byte[] ourID;
+	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
+	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException, InterruptedException{
+		
 		this.IP = ip;
 		this.port = port;
 		this.torrentInfo = ConnectToTracker.torrentI;
 		this.peerID = id;
 		this.infoHash = torrentInfo.info_hash.array();
 		this.fileOutArg = fileOutArg;
-		this.ourID=ConnectToTracker.toSendToPeerID;
+		this.ourID = ConnectToTracker.toSendToPeerID;
 	}
 
 	public void downloadFileFromPeer() throws IOException, InterruptedException {
+		
 		handShake();
 		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
@@ -61,29 +61,21 @@ public class Peer {
 			in.readFully(bitField); //get rid of bit field
 		}
 
-		System.out.println("Writing message.");
+		System.out.println("Writing message to peer.");
 		os.write(interested.message);
 		os.flush();//push message to stream
-		System.out.println("Finished writing message.");
+		System.out.println("Finished writing message to peer.");
 
 		System.out.println("Reading message.");
 		read = readMessage();
 		System.out.println("Finished reading message.");
-		if (read == 1){
-			System.out.println("Reading in byte.");
-			in.readByte();	//unchoked so proceed
-			System.out.println("Finished reading in byte.");
-			//System.out.println("not chocked: "+read);
-		}
-		
-		//System.out.println("Read " +read);
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
 		fileoutput = new FileOutputStream(new File(this.fileOutArg));
 
 		System.out.println("Started downloading chunks.");
-		//System.out.println("Lenght: "+torrentInfo.piece_hashes.length);
+
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
 			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECES
@@ -129,7 +121,6 @@ public class Peer {
 					tempBuff[k]=in.readByte();
 				}
 
-			//	System.out.println("Get here in line 165.");
 				chunk = new byte[index]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
 					in.readByte();
@@ -148,14 +139,13 @@ public class Peer {
 				}	
 			}			
 		}
-		finishConnection();
 		System.out.println("Finished downloading chunks.");
+		finishConnection();
 	}
 
 	private void handShake(){
 		
 		//construct message to send to peer.
-		System.out.println("Started handshake.");
 		byte[] message = new byte[68];
 		message[0] = (byte)19;
 		System.arraycopy(BitProtocol, 0,message,1,19);
@@ -164,10 +154,12 @@ public class Peer {
 		System.arraycopy(ourID, 0, message, 48, 20);
 
 		try {//open connections
+			System.out.println("Connecting to Peer.");
 			socket = new Socket(IP,port);
+			System.out.println("Connected.");
 			os = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.out.println("Error: Could not Open Socket to Peer.");
 		} //tries to create socket
 
@@ -175,7 +167,7 @@ public class Peer {
 			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
 			finishConnection();
 		}
-
+		System.out.println("Started handshake.");
 		try { //initiate handshake and get reply
 			os.write(message); 
 			os.flush(); //writes message out to stream 
@@ -209,7 +201,7 @@ public class Peer {
 				return;
 			}
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.out.println("Error: Could not handshake with peer.");
 		}
 		System.out.println("finished handshake.");
@@ -219,7 +211,7 @@ public class Peer {
 		
 		int msgLength = in.readInt();
 		byte id = in.readByte();
-
+		
 		//keep-alive
 		if(msgLength == 0){
 			return -1;
