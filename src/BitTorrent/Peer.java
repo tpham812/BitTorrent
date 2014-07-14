@@ -13,12 +13,12 @@ import java.util.Arrays;
 
 public class Peer {
 
-	public Socket socket;
-	public DataOutputStream os;
-	public DataInputStream in;
-	public OutputStream output;
+	private Socket socket;
+	private DataOutputStream os;
+	private DataInputStream in;
+	private OutputStream output;
 	TorrentInfo torrentInfo;
-	public InputStream input;
+	private InputStream input;
 	byte[] infoHash;
 	String IP;
 	int port;
@@ -27,16 +27,9 @@ public class Peer {
 	byte[] ourID;
 	FileOutputStream fileoutput;
 	ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
-	static byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
+	final byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
+	final byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
-	//constructor 
-	public Peer(int port, String IP){ 
-		this.port = port;
-		this.IP = IP;
-
-
-	} 
 	public Peer(String ip, int port, byte[] id, String fileOutArg) throws IOException, InterruptedException{
 		this.IP = ip;
 		this.port = port;
@@ -50,21 +43,8 @@ public class Peer {
 		finishConnection();
 	}
 
-	private void finishConnection() {
-
-		try {
-			socket.close();
-			in.close();
-			os.close();
-			fileoutput.close();
-		} catch (Exception e) {
-			System.out.println("Error: Could not close data streams!");
-			return;
-		}
-
-	}
-
 	private void downloadFileFromPeer() throws IOException, InterruptedException {
+		
 		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
@@ -133,10 +113,8 @@ public class Peer {
 				askForPieces = new Message(13,(byte)6); 
 				askForPieces.setPayload(index,begin,block);
 
-
 				os.write(askForPieces.message);
 				os.flush(); //push to output stream.
-
 
 				//	System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
 				tempBuff = new byte[4];  //read in first four bytes which we don't use
@@ -145,7 +123,6 @@ public class Peer {
 				}
 
 			//	System.out.println("Get here in line 165.");
-
 				chunk = new byte[index]; //create piece length size chunk
 				for (int l = 0; l<9;l++){
 					in.readByte();
@@ -166,7 +143,8 @@ public class Peer {
 		}
 	}
 
-	public void handShake(){
+	private void handShake(){
+		
 		//construct message to send to peer.
 		byte[] message = new byte[68];
 		message[0] = (byte)19;
@@ -191,7 +169,6 @@ public class Peer {
 		try { //initiate handshake and get reply
 			os.write(message); 
 			os.flush(); //writes message out to stream 
-
 
 			byte[] peerAns = new byte[68];   //get peer reply
 			in.readFully(peerAns); //has to read in 68 bytes else error thrown + stores into peerAns
@@ -225,11 +202,10 @@ public class Peer {
 		} catch (IOException e) {
 			System.out.println("Error: Could not handshake with peer.");
 		}
-
-
 	}
 
-	public byte readMessage() throws IOException{
+	private byte readMessage() throws IOException {
+		
 		int msgLength = in.readInt();
 		byte id = in.readByte();
 
@@ -240,19 +216,21 @@ public class Peer {
 		switch(id){
 		case 7: 
 			int index = in.readInt();
-			int begin = in.readInt();
-			//8: cancel		
+			int begin = in.readInt();	
 		default: return id;
 		}
 	}
-
-
-	//prints out peer information
-	public String toString(){
-		String peerInfo = "Peer Information:" + peerID +  ", " + IP + ", " + port; 
-		return peerInfo;
+	
+	private void finishConnection() {
+		
+		try {
+			socket.close();
+			in.close();
+			os.close();
+			fileoutput.close();
+		} catch (Exception e) {
+			System.out.println("Error: Could not close data streams!");
+			return;
+		}
 	}
-
-
-
 }

@@ -1,11 +1,8 @@
 package BitTorrent;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -16,45 +13,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConnectToTracker {
-
 	
 	private String finalMessage;
 	private HttpURLConnection connection;
 	public static TorrentInfo torrentI; 
 	private ByteBuffer infoHash;
-	BufferedInputStream trackerResponse;
-	ByteArrayOutputStream temp_output;
-	static byte[] toSendToPeerID;
+	public static byte[] toSendToPeerID;
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
 	public final static ByteBuffer KEY_PEER_PORT = ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]{'p', 'e', 'e', 'r', ' ', 'i', 'd'});
 
-	public ConnectToTracker(File torrent_file, String file) {
+	public ArrayList getTrackerResponse(File torrent_file, String file) {
 
-		connection = null;
-		torrentI = null;
-		infoHash = null;
-		getTrackerResponse(torrent_file, file);
-	}
-	public void getTrackerResponse(File torrent_file, String file) {
-
+		ArrayList list;
 		HashMap peer_map = null;
 		HashMap trackerAnswer;
-		String peerIP = "", peerID = "";
 		boolean found = false;
 		int peerPort = 0;
-
+		String peerIP = "", peerID = "";
+		
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); //get byte array of file
 		try { //creates torrentinfo object and stores other stuff
 			torrentI = new TorrentInfo(torrentFile);
 		} catch (Exception e) {
 			System.out.println("Error: Could not create torrentinfo object.");
-			return;
+			return null;
 		}
 
 		Map<ByteBuffer,Object> torrentmeta = torrentI.torrent_file_map; //gets the map from the object
-		Map<ByteBuffer,Object> info = (Map<ByteBuffer,Object>)torrentmeta.get(TorrentInfo.KEY_INFO);
 
 		infoHash = torrentI.info_hash; 
 
@@ -63,52 +50,24 @@ public class ConnectToTracker {
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
-			return;
+			return null;
 		}
-		do {
-			ArrayList list = (ArrayList)trackerAnswer.get(KEY_PEERS);
-
-			
-			for(int i = 0; i < list.size(); i++){
-				peer_map = (HashMap)list.get(i);
-				peerIP = new String(((ByteBuffer)peer_map.get(KEY_PEER_IP)).array());
-				peerID = new String(((ByteBuffer)peer_map.get(KEY_PEER_ID)).array());
-				peerPort = (int)peer_map.get(KEY_PEER_PORT);	
-				//System.out.println(peerID);
-				//System.out.println(peerIP);
-				if(peerIP.equals("128.6.171.130") && peerID.contains("RU1103")) {
-					found = true;
-					break;
-				}
-			}
-			if(!found) {
-				try {
-					Thread.sleep(5000);
-				} catch (Exception e) {
-					System.out.println("Error: Thread is unable to sleep for 5 secs");
-					connection.disconnect();
-					return;
-				}
-				System.out.println("Getting new list");
-				try {
-					sendMessageToTracker();
-					trackerAnswer = getMessageFromTracker();
-				} catch (Exception e) {
-					System.out.println("Error: tracker message could not be obtained.");
-					return;
-				}
-			}
-		}while(!found);
-		connection.disconnect();
-		
-		try {
-			Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_map.get(KEY_PEER_ID)).array(), file);
-		} catch (Exception e) {
-			e.printStackTrace();
-			//System.out.println("Error: Cannot create Peer.");
-		}
+		return (ArrayList)trackerAnswer.get(KEY_PEERS);
 	}
-
+	
+	public ArrayList requestNewReponse() {
+		
+		HashMap trackerAnswer = null;
+		try {
+			sendMessageToTracker();
+			trackerAnswer = getMessageFromTracker();
+		} catch (Exception e) {
+			System.out.println("Error: tracker message could not be obtained.");
+		}
+		
+		return (ArrayList)trackerAnswer.get(KEY_PEERS);
+	}
+	
 	/**
 	 * Sends formatted URL message to tracker, connects to tracker and returns the decoded answer of tracker
 	 * @param trackerURL URL of the tracker to use in message to send to tracker
@@ -145,7 +104,6 @@ public class ConnectToTracker {
 		}while(connection == null);
 	}
 
-	
 	public HashMap getMessageFromTracker() {
 
 		//get tracker response, decode it and extract list of peers and their ids.
@@ -166,5 +124,10 @@ public class ConnectToTracker {
 			return null;
 		}
 		return tracker_decoded_response;
+	}
+	
+public void disconnect() {
+		
+		connection.disconnect();
 	}
 }

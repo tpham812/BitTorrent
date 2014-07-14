@@ -1,22 +1,20 @@
 package BitTorrent;
 
 public class Message {
-	public static final byte MSG_KEEP_ALIVE = -1;
-	public static final byte MSG_CHOKE = 0;
-	public static final byte MSG_UNCHOKE = 1;
-	public static final byte MSG_INTERESTED = 2;
-	public static final byte MSG_NOT_INTERESTED = 3;
-	public static final byte MSG_HAVE = 4;
-	public static final byte MSG_BITFIELD = 5;
-	public static final byte MSG_REQUEST = 6;
-	public static final byte MSG_PIECE = 7;
-	public static final byte MSG_CANCEL = 8;
-	public final byte id;
-	public int lengthPrefix;
+	private static final byte MSG_KEEP_ALIVE = -1;
+	private static final byte MSG_CHOKE = 0;
+	private static final byte MSG_UNCHOKE = 1;
+	private static final byte MSG_INTERESTED = 2;
+	private static final byte MSG_NOT_INTERESTED = 3;
+	private static final byte MSG_HAVE = 4;
+    private	static final byte MSG_REQUEST = 6;
+	private static final byte MSG_PIECE = 7;
+	private byte id;
+	private int lengthPrefix;
 	public byte[] message;
 
-
 	public Message (int lengthPrefix, byte msgID){
+		
 		this.lengthPrefix = lengthPrefix;
 		this.id = msgID;
 		this.message = new byte[this.lengthPrefix + 4];
@@ -61,21 +59,15 @@ public class Message {
 		if (id == MSG_HAVE) {
 			System.arraycopy(Helper.intToByteArray(4), 0,message, 5, 4);
 		} else if (id == MSG_PIECE) {
-
 			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4); 
 			System.arraycopy(null, 0, message, 13, lengthPrefix-9);
-
 		} else if (id == MSG_REQUEST) {
-
 			System.arraycopy(Helper.intToByteArray(numChunks),0,message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4);
 			System.arraycopy(Helper.intToByteArray(requestIndex), 0,message, 13, 4);
-
-
 		} else {
 			System.out.println("Error: Payload requested for wrong message id type. Payload can only be done for have, pieces and request ids only.");
-
 		}
 		return;
 	}
