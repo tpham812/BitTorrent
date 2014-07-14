@@ -29,7 +29,10 @@ public class RUBTClient {
 			System.out.println("Error: File not found.");
 			return;
 		}
+		
+		System.out.println("Starting download.");
 		startDownload(torrent_File, args[1]);	
+		System.out.println("Finished download.");
 	}
 	
 	public static void startDownload(File torrent_File, String fileName) {

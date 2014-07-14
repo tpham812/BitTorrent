@@ -27,7 +27,7 @@ public class ConnectToTracker {
 	public ArrayList getTrackerResponse(File torrent_file, String file) {
 
 		HashMap trackerAnswer;
-	
+		System.out.println("Connecting to tracker. Please wait.");
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); //get byte array of file
 		try { //creates torrentinfo object and stores other stuff
 			torrentI = new TorrentInfo(torrentFile);
@@ -86,6 +86,7 @@ public class ConnectToTracker {
 		String left = "" + torrentI.file_length;
 		String event = "started";
 
+		System.out.println("Sending message to Tracker.");
 		do
 		{
 			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+Integer.toString(portNumber+1)+"&uploaded="
@@ -103,6 +104,7 @@ public class ConnectToTracker {
 
 		//get tracker response, decode it and extract list of peers and their ids.
 		HashMap tracker_decoded_response = null;
+		System.out.println("Getting response from Tracker.");
 		try {
 			BufferedInputStream trackerResponse = new BufferedInputStream(connection.getInputStream());
 			ByteArrayOutputStream temp_output = new ByteArrayOutputStream();
