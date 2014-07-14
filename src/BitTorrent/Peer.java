@@ -52,27 +52,37 @@ public class Peer {
 		int lastSize;
 		int begin = 0;
 		
+		System.out.println("Reading message.");
 		int read = readMessage();
+		System.out.println("Finished reading message.");
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
 			//part 1 = only have bit field message due to one peer with everything only. 
 			in.readFully(bitField); //get rid of bit field
 		}
 
+		System.out.println("Writing message.");
 		os.write(interested.message);
 		os.flush();//push message to stream
+		System.out.println("Finished writing message.");
 
+		System.out.println("Reading message.");
 		read = readMessage();
+		System.out.println("Finished reading message.");
 		if (read == 1){
+			System.out.println("Reading in byte.");
 			in.readByte();	//unchoked so proceed
+			System.out.println("Finished reading in byte.");
 			//System.out.println("not chocked: "+read);
 		}
+		
 		//System.out.println("Read " +read);
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
 		fileoutput = new FileOutputStream(new File(this.fileOutArg));
 
+		System.out.println("Started downloading chunks.");
 		//System.out.println("Lenght: "+torrentInfo.piece_hashes.length);
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
@@ -139,11 +149,13 @@ public class Peer {
 			}			
 		}
 		finishConnection();
+		System.out.println("Finished downloading chunks.");
 	}
 
 	private void handShake(){
 		
 		//construct message to send to peer.
+		System.out.println("Started handshake.");
 		byte[] message = new byte[68];
 		message[0] = (byte)19;
 		System.arraycopy(BitProtocol, 0,message,1,19);
@@ -200,6 +212,7 @@ public class Peer {
 		} catch (IOException e) {
 			System.out.println("Error: Could not handshake with peer.");
 		}
+		System.out.println("finished handshake.");
 	}
 
 	private byte readMessage() throws IOException {
