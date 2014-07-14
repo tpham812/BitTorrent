@@ -26,13 +26,8 @@ public class ConnectToTracker {
 
 	public ArrayList getTrackerResponse(File torrent_file, String file) {
 
-		ArrayList list;
-		HashMap peer_map = null;
 		HashMap trackerAnswer;
-		boolean found = false;
-		int peerPort = 0;
-		String peerIP = "", peerID = "";
-		
+	
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); //get byte array of file
 		try { //creates torrentinfo object and stores other stuff
 			torrentI = new TorrentInfo(torrentFile);
