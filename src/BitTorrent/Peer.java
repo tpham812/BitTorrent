@@ -28,10 +28,10 @@ public class Peer {
 	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
-	public Peer(String ip, String id, int port, String fileOutArg) throws IOException, InterruptedException{
+	public Peer(String ip, byte[] id, int port, String fileOutArg) throws IOException, InterruptedException{
 		
 		this.IP = ip;
-		this.ID = id.getBytes();
+		this.ID = id;
 		this.port = port;
 		this.torrentInfo = ConnectToTracker.torrentI;
 		this.infoHash = torrentInfo.info_hash.array();
