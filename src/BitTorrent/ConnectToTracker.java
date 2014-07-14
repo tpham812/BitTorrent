@@ -114,12 +114,15 @@ public class ConnectToTracker {
 			}
 			byte[] trackerAnswer = temp_output.toByteArray();
 			//System.out.println("Tracker Answer:"+new String(trackerAnswer));
+			System.out.println("Starting decoding.");
 			tracker_decoded_response =  (HashMap)Bencoder2.decode(trackerAnswer);
+			System.out.println("Finsihed decoding.");
 			//decode tracker response and return it.
 		} catch (Exception e) {
 			System.out.println("Error: Cannot get tracker response.");
 			return null;
 		}
+		System.out.println("Got response.");
 		return tracker_decoded_response;
 	}
 	
