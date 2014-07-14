@@ -43,7 +43,6 @@ public class RUBTClient {
 		ConnectToTracker ct = new ConnectToTracker();
 		list = ct.getTrackerResponse(torrent_File, fileName);
 		do {
-			
 			for(int i = 0; i < list.size(); i++){
 				peer_Map = (HashMap)list.get(i);
 				peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
@@ -74,6 +73,7 @@ public class RUBTClient {
 		ct.disconnect();
 		try {
 			Peer peer = new Peer(peerIP, peerPort, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), fileName);
+			peer.downloadFileFromPeer();
 		} catch (Exception e) {
 			System.out.println("Error: Cannot create Peer.");
 		}

@@ -38,13 +38,10 @@ public class Peer {
 		this.infoHash = torrentInfo.info_hash.array();
 		this.fileOutArg = fileOutArg;
 		this.ourID=ConnectToTracker.toSendToPeerID;
-		handShake();
-		downloadFileFromPeer();
-		finishConnection();
 	}
 
-	private void downloadFileFromPeer() throws IOException, InterruptedException {
-		
+	public void downloadFileFromPeer() throws IOException, InterruptedException {
+		handShake();
 		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
@@ -141,6 +138,7 @@ public class Peer {
 				}	
 			}			
 		}
+		finishConnection();
 	}
 
 	private void handShake(){
