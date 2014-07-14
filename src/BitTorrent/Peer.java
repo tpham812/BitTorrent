@@ -52,9 +52,9 @@ public class Peer {
 		int lastSize;
 		int begin = 0;
 		
-		System.out.println("Reading message.");
+		System.out.println("Reading message from peer.");
 		int read = readMessage();
-		System.out.println("Finished reading message.");
+		System.out.println("Finished reading message from peer.");
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
 			//part 1 = only have bit field message due to one peer with everything only. 
@@ -66,9 +66,9 @@ public class Peer {
 		os.flush();//push message to stream
 		System.out.println("Finished writing message to peer.");
 
-		System.out.println("Reading message.");
+		System.out.println("Reading message from peer.");
 		read = readMessage();
-		System.out.println("Finished reading message.");
+		System.out.println("Finished reading message from peer.");
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -79,9 +79,7 @@ public class Peer {
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
 			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECES
-				System.out.println("GETTING TO LAST BLOCK!!!");
 				askForPieces = new Message(13,(byte)6); 
-
 				if (lastSize<index){
 					index = lastSize;
 				}else{
@@ -145,6 +143,7 @@ public class Peer {
 
 	private void handShake(){
 		
+		boolean peerInfoGood = true;
 		//construct message to send to peer.
 		byte[] message = new byte[68];
 		message[0] = (byte)19;
@@ -167,7 +166,7 @@ public class Peer {
 			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
 			finishConnection();
 		}
-		System.out.println("Started handshake.");
+		System.out.println("Starting handshake.");
 		try { //initiate handshake and get reply
 			os.write(message); 
 			os.flush(); //writes message out to stream 
@@ -177,7 +176,7 @@ public class Peer {
 
 			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
 			//checks if peer's info hash returned is same as info has we have from tracker
-			boolean peerInfoGood = false;
+		
 			for (int i = 0; i<20;i++){
 				if (peerInfoHash[i]!=infoHash[i]){
 					System.out.println("Error: Peer's info hash returned from handshake is not same.");
@@ -200,7 +199,6 @@ public class Peer {
 			if (peerInfoGood==false){
 				return;
 			}
-
 		} catch (Exception e) {
 			System.out.println("Error: Could not handshake with peer.");
 		}
