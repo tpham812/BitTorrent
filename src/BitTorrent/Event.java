@@ -7,7 +7,6 @@ package BitTorrent;
  */
 public class Event {
 
-	
 	/**
 	 * Start event
 	 * @return start event to concatenate for GET request
