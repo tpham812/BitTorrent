@@ -102,16 +102,16 @@ public class ConnectToTracker {
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();
 		toSendToPeerID = peerID.getBytes();
-		String uploaded = "0", downloaded = "0";
-		String left = "" + torrentI.file_length;
-		String event = "started";
+		String uploaded = new String(Bencoder2.encode(0)), downloaded = new String(Bencoder2.encode(0));
+		String left = new String(Bencoder2.encode(torrentI.file_length));
 
 		System.out.println("Sending message to Tracker.");
 		do
 		{
+			portNumber++;
 			/**Message to send to tracker*/
-			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+Integer.toString(portNumber+1)+"&uploaded="
-					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event; 
+			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+portNumber+"&uploaded="
+					+uploaded+"&downloaded="+downloaded+"&left="+left;
 			try {
 				/**Open up connection to tracker*/
 				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
@@ -155,6 +155,7 @@ public class ConnectToTracker {
 		System.out.println("Got response.");
 		return tracker_decoded_response;
 	}
+
 
 	/**
 	 * Disconnect from tracker
