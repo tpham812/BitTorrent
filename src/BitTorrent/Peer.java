@@ -123,6 +123,7 @@ public class Peer {
 
 		System.out.println("Started downloading chunks.");
 
+		ConnectToTracker.sendStartedMessage();
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
 			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECE
@@ -176,6 +177,7 @@ public class Peer {
 				}else{
 					//add the chunk and write to the file if correct
 					this.chunks.add(chunk); //add to array
+					ConnectToTracker.updateAmounts(chunk.length);
 					fileoutput.write(chunk); //write to file
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
@@ -234,6 +236,7 @@ public class Peer {
 					//add chunk to array and write to file and send have message
 					this.chunks.add(chunk); //add to array
 					fileoutput.write(chunk); //write to file
+					ConnectToTracker.updateAmounts(chunk.length);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
 					os.write(have.message);
@@ -249,6 +252,7 @@ public class Peer {
 			}			
 		}
 		System.out.println("Finished downloading chunks.");
+		ConnectToTracker.sendCompletedMessage();
 		finishConnection();
 	}
 

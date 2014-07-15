@@ -46,7 +46,6 @@ public class RUBTClient {
 			System.out.println("Error: File not found.");
 			return;
 		}
-
 		System.out.println("Starting download.");
 		/**Start download */
 		startDownload(torrent_File, args[1]);	
@@ -102,7 +101,6 @@ public class RUBTClient {
 				}
 			}
 		}while(!found);
-		ct.disconnect(); /**Disconnect from tracker*/
 		try {
 			/**Connect to peer*/
 			Peer peer = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
@@ -111,5 +109,12 @@ public class RUBTClient {
 		} catch (Exception e) {
 			System.out.println("Error: Cannot create Peer.");
 		}
+		try {
+			
+			ConnectToTracker.sendStoppedMessage();
+		} catch (Exception e) {
+			System.out.println("Couldn't send stop event message");
+		}
+		ct.disconnect(); /**Disconnect from tracker*/
 	}
 }
