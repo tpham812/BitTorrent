@@ -10,35 +10,58 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+/**
+ * This class connects to tracker and returns a decoded tracker response 
+ * @author Truong Pham
+ *
+ */
 public class ConnectToTracker {
 	
+	/**Stores message to be sent to tracker*/
 	private String finalMessage;
+	/**Connection to connect to tracker*/
 	private HttpURLConnection connection;
+	/**TorrentInfo to access torrent information*/
 	public static TorrentInfo torrentI; 
+	/**Stores infohash*/
 	private ByteBuffer infoHash;
+	/**Generated peer ID*/
 	public static byte[] toSendToPeerID;
+	/**Key used to retrieve peer list*/
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
+	/**Key used to retrieve peer port number*/
 	public final static ByteBuffer KEY_PEER_PORT = ByteBuffer.wrap(new byte[]{ 'p', 'o', 'r', 't'});
+	/**Key used to retrieve peer IP*/
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
+	/**Key used to retrieve peer ID*/
 	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]{'p', 'e', 'e', 'r', ' ', 'i', 'd'});
 
+	/**
+	 * Connect to tracker and receive a tracker response
+	 * @param torrent_file 
+	 * @param file
+	 * @return response of the tracker in an array list
+	 */
 	public ArrayList getTrackerResponse(File torrent_file, String file) {
 
 		HashMap trackerAnswer;
 		System.out.println("Connecting to tracker. Please wait.");
-		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); //get byte array of file
-		try { //creates torrentinfo object and stores other stuff
+		/**Get byte array of torrent file*/
+		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); 
+		try { 
+			/**Creates torrentinfo object*/
 			torrentI = new TorrentInfo(torrentFile);
 		} catch (Exception e) {
 			System.out.println("Error: Could not create torrentinfo object.");
 			return null;
 		}
 
+		/**Infohash*/
 		infoHash = torrentI.info_hash; 
-
 		try {
+			/**Send message to tracker*/
 			sendMessageToTracker();
+			/**Get tracker response*/
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
@@ -47,22 +70,26 @@ public class ConnectToTracker {
 		return (ArrayList)trackerAnswer.get(KEY_PEERS);
 	}
 	
+	/**
+	 * Request a new response from tracker. Sends message to tracker and receive a decoded response
+	 * @return returns a new reponse from tracker in an array list
+	 */
 	public ArrayList requestNewReponse() {
 		
 		HashMap trackerAnswer = null;
 		try {
+			/**Send message to tracker */
 			sendMessageToTracker();
+			/**Decoded response from tracker */
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 		}
-		
 		return (ArrayList)trackerAnswer.get(KEY_PEERS);
 	}
 	
 	/**
 	 * Sends formatted URL message to tracker, connects to tracker and returns the decoded answer of tracker
-	 * @param trackerURL URL of the tracker to use in message to send to tracker
 	 * @return Decoded message of Tracker as hashmap
 	 * @throws UnsupportedEncodingException
 	 * @throws BencodingException
@@ -81,9 +108,11 @@ public class ConnectToTracker {
 		System.out.println("Sending message to Tracker.");
 		do
 		{
+			/**Message to send to tracker*/
 			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+Integer.toString(portNumber+1)+"&uploaded="
 					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event; 
 			try {
+				/**Open up connection to tracker*/
 				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
 			} catch (Exception e) {
 				System.out.println("Error: Could not connect to tracker");
@@ -91,7 +120,11 @@ public class ConnectToTracker {
 			}
 		}while(connection == null);
 	}
-
+	
+	/**
+	 * Receive a message from tracker and return a decoded response
+	 * @return Decoded response in a hash map
+	 */
 	public HashMap getMessageFromTracker() {
 
 		//get tracker response, decode it and extract list of peers and their ids.
@@ -101,15 +134,19 @@ public class ConnectToTracker {
 			BufferedInputStream trackerResponse = new BufferedInputStream(connection.getInputStream());
 			ByteArrayOutputStream temp_output = new ByteArrayOutputStream();
 			byte[] buf = new byte[1];
+			
+			/**Read in tracker response*/
 			while (trackerResponse.read(buf)!=-1){
 				temp_output.write(buf);
 			}
+			
+			/**Store tracker response in byte array*/
 			byte[] trackerAnswer = temp_output.toByteArray();
-			//System.out.println("Tracker Answer:"+new String(trackerAnswer));
 			System.out.println("Starting decoding response.");
+			
+			/**Decode tracker response*/
 			tracker_decoded_response =  (HashMap)Bencoder2.decode(trackerAnswer);
 			System.out.println("Finsihed decoding response.");
-			//decode tracker response and return it.
 		} catch (Exception e) {
 			System.out.println("Error: Cannot get tracker response.");
 			return null;
@@ -118,6 +155,9 @@ public class ConnectToTracker {
 		return tracker_decoded_response;
 	}
 	
+	/**
+	 * Disconnect from tracker
+	 */
 	public void disconnect() {
 		
 		connection.disconnect();

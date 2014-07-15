@@ -12,7 +12,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
+/**
+ * This class connects to a peer and download chunks from the file requested
+ * @author Truong Pham
+ *
+ */
 public class Peer {
 
 	private Socket socket;
@@ -30,6 +34,15 @@ public class Peer {
 	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
+	/**
+	 * Constructor that sets fields
+	 * @param ip peer IP
+	 * @param id peer ID
+	 * @param port peer port
+	 * @param fileOutArg file to save chunks to
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public Peer(String ip, byte[] id, int port, String fileOutArg) throws IOException, InterruptedException{
 		
 		this.IP = ip;
@@ -41,18 +54,25 @@ public class Peer {
 		this.ourID = ConnectToTracker.toSendToPeerID;
 	}
 
+	/**
+	 * Download file from peer
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public void downloadFileFromPeer() throws IOException, InterruptedException {
 		
-		handShake();
-		Message interested = new Message(1,(byte)2); //create message that you are interested 
 		byte[] chunk;
 		byte[] tempBuff;
-		int block = 0;
-		Message askForPieces; //ask for more chunks
-		int index = torrentInfo.piece_length; //typical length of piece
 		int left;
 		int lastSize;
 		int begin = 0;
+		int block = 0;
+		Message askForPieces;
+		int index = torrentInfo.piece_length; /**Length of piece*/
+		
+		/**Start handshaking with peer*/
+		handShake(); 
+		Message interested = new Message(1,(byte)2); /**create interested message*/
 		
 		System.out.println("Reading message from peer.");
 		int read = readMessage();
@@ -175,10 +195,13 @@ public class Peer {
 		finishConnection();
 	}
 
+	/**
+	 * Handshake with peer
+	 */
 	private void handShake(){
 		
 		boolean peerInfoGood = true;
-		//construct message to send to peer.
+		/**Construct message to send to peer*/
 		byte[] message = new byte[68];
 		message[0] = (byte)19;
 		System.arraycopy(BitProtocol, 0,message,1,19);
@@ -186,31 +209,36 @@ public class Peer {
 		System.arraycopy(infoHash,0, message, 28, 20);
 		System.arraycopy(ourID, 0, message, 48, 20);
 
-		try {//open connections
+		try {
 			System.out.println("Connecting to Peer.");
+			
+			/**Open connection by using a socket*/
 			socket = new Socket(IP,port);
 			System.out.println("Connected.");
+			/**Create input and output stream*/
 			os = new DataOutputStream(socket.getOutputStream());
 			in = new DataInputStream(socket.getInputStream());
 		} catch (Exception e) {
 			System.out.println("Error: Could not Open Socket to Peer.");
-		} //tries to create socket
+		} 
 
 		if (socket==null){ //bad host name given.
 			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
 			finishConnection();
 		}
 		System.out.println("Starting handshake.");
-		try { //initiate handshake and get reply
+		try {
+			/**Initiate handshake by sending message to peer*/
 			os.write(message); 
-			os.flush(); //writes message out to stream 
+			os.flush(); 
 
-			byte[] peerAns = new byte[68];   //get peer reply
-			in.readFully(peerAns); //has to read in 68 bytes else error thrown + stores into peerAns
+			/**Get reply from peer*/
+			byte[] peerAns = new byte[68];
+			in.readFully(peerAns);
 
 			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
-			//checks if peer's info hash returned is same as info has we have from tracker
-		
+			
+			/**checks if peer's info hash returned is same as info has we have from tracker*/
 			for (int i = 0; i<20;i++){
 				if (peerInfoHash[i]!=infoHash[i]){
 					System.out.println("Error: Peer's info hash returned from handshake is not same.");
@@ -219,7 +247,7 @@ public class Peer {
 					break;
 				}		
 			}
-			//check if peer id is same as the tracker given peer id!!!
+			/**Check if peer id is same as the tracker given peer id*/
 			byte[] peerIDCheck = Arrays.copyOfRange(peerAns, 48, 68);
 			for (int n = 0; n <20;n++){
 				if (ID[n]!=peerIDCheck[n]){
@@ -229,7 +257,7 @@ public class Peer {
 					break;
 				}
 			}
-			//if peer info given does not match as tracker's given, exit (already closed connections before).
+			/**If peer info given does not match as tracker's given, exit (already closed connections before)*/
 			if (peerInfoGood==false){
 				return;
 			}
@@ -239,9 +267,16 @@ public class Peer {
 		System.out.println("finished handshake.");
 	}
 
+	/**
+	 * Read in message from peer
+	 * @return message as byte
+	 * @throws IOException
+	 */
 	private byte readMessage() throws IOException {
 		
+		/**Read in message*/
 		int msgLength = in.readInt();
+		/**Read in id*/
 		byte id = in.readByte();
 		
 		//keep-alive
@@ -256,9 +291,13 @@ public class Peer {
 		}
 	}
 	
+	/** 
+	 * Close connection and streams
+	 */
 	private void finishConnection() {
 		
 		try {
+			/**Close socket and streams*/
 			socket.close();
 			in.close();
 			os.close();
