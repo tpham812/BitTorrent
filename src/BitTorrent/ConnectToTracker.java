@@ -51,9 +51,9 @@ public class ConnectToTracker {
 	 * @param file
 	 * @return response of the tracker in an array list
 	 */
-	public ArrayList getTrackerResponse(File torrent_file, String file) {
+	public HashMap getTrackerResponse(File torrent_file, String file) {
 
-		HashMap trackerAnswer;
+		HashMap trackerAnswer = null;
 		System.out.println("Connecting to tracker. Please wait.");
 		/**Get byte array of torrent file*/
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); 
@@ -76,7 +76,7 @@ public class ConnectToTracker {
 			System.out.println("Error: tracker message could not be obtained.");
 			return null;
 		}
-		return (ArrayList)trackerAnswer.get(KEY_PEERS);
+		return trackerAnswer;
 	}
 
 	/**

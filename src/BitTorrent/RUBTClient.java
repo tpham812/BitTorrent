@@ -48,9 +48,13 @@ public class RUBTClient {
 		}
 		System.out.println("Starting download.");
 		/**Start download */
-		startDownload(torrent_File, args[1]);	
-		System.out.println("Finished download.");
-		
+		int result = startDownload(torrent_File, args[1]);
+		if(result == 1)
+			System.out.println("Tracker failed to respond. Download canceled");
+		else if(result == 2)
+			System.out.println("Could not continue download due to errors. Download canceled");
+		else 
+			System.out.println("Finished download");	
 	}
 
 	/**
@@ -58,17 +62,18 @@ public class RUBTClient {
 	 * @param torrent_File Torrent file
 	 * @param fileName File name to store 
 	 */
-	public static void startDownload(File torrent_File, String fileName) {
+	public static int startDownload(File torrent_File, String fileName) {
 
-		HashMap peer_Map = null;
+		HashMap peer_Map = null, response = null;
 		ArrayList list = null;
 		String peerID ="", peerIP = "";
 		boolean found = false;
 		int peerPort = 0;
 
 		ConnectToTracker ct = new ConnectToTracker();
-		list = ct.getTrackerResponse(torrent_File, fileName); /**Get tracker response*/
-
+		response = ct.getTrackerResponse(torrent_File, fileName); /**Get tracker response*/
+		if(response == null) return 1;
+		list = (ArrayList)response.get(ConnectToTracker.KEY_PEERS);
 		/**Request new tracker response if peer RU1103 is not found*/
 		do {
 			/**Look for peer RU1103 from list*/
@@ -90,14 +95,14 @@ public class RUBTClient {
 				} catch (Exception e) {
 					System.out.println("Error: Thread is unable to sleep for 5 secs");
 					ct.disconnect();
-					return;
+					return 2;
 				}
 				System.out.println("Getting new list");
 				try {
 					list = ct.requestNewReponse(); /**Request new response*/
 				} catch (Exception e) {
 					System.out.println("Error: tracker message could not be obtained.");
-					return;
+					return 2;
 				}
 			}
 		}while(!found);
@@ -116,5 +121,6 @@ public class RUBTClient {
 			System.out.println("Couldn't send stop event message");
 		}
 		ct.disconnect(); /**Disconnect from tracker*/
+		return 0;
 	}
 }
