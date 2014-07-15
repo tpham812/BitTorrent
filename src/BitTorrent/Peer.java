@@ -79,7 +79,7 @@ public class Peer {
 		System.out.println("Finished reading message from peer.");
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
-			//part 1 = only have bit field message due to one peer with everything only. 
+			
 			in.readFully(bitField); //get rid of bit field
 		}
 
@@ -91,6 +91,9 @@ public class Peer {
 		System.out.println("Reading message from peer.");
 		read = readMessage();
 		System.out.println("Finished reading message from peer.");
+		if(read == 1) 
+			System.out.println("Unchoked. Downloading chunks.");
+	
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
