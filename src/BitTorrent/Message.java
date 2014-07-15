@@ -1,5 +1,10 @@
 package BitTorrent;
 
+/**
+ * This class represents message types sent between two peers through a stream of bytes.
+ * @author Amulya Uppala, Jewel Lim, Truong Pham
+ *
+ */
 
 public class Message {
 
@@ -15,6 +20,12 @@ public class Message {
 	private int lengthPrefix;
 	public byte[] message;
 
+	/**
+	 * @param lengthPrefix
+	 * @param msgID
+	 * 
+	 * This method is the constructor specifies the different message types sent between two peers. 
+	 */
 	public Message (int lengthPrefix, byte msgID){
 
 		this.lengthPrefix = lengthPrefix;
@@ -30,7 +41,7 @@ public class Message {
 			this.message[4] = (byte) 1;
 			break;
 		case MSG_KEEP_ALIVE:
-			//empty
+			//empty 
 			break;
 		case MSG_INTERESTED:
 			System.arraycopy(Helper.intToByteArray(lengthPrefix), 0, this.message, 0, 4);
@@ -56,18 +67,29 @@ public class Message {
 		}
 	}
 
+	/**
+	 * @param requestIndex
+	 * @param currentDL
+	 * @param numChunks
+	 * 
+	 * This method sets the payload for messages that are type HAVE, REQUEST, or PIECE.
+	 * If it is not one of those messages, it outputs an error.  
+	 */
 	public void setPayload(int requestIndex, int currentDL, int numChunks) {
 
 		if (id == MSG_HAVE) {
 			System.arraycopy(Helper.intToByteArray(numChunks), 0,message, 5, 4);
+			
 		} else if (id == MSG_PIECE) {
 			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4); 
 			System.arraycopy(null, 0, message, 13, lengthPrefix-9);
+			
 		} else if (id == MSG_REQUEST) {
 			System.arraycopy(Helper.intToByteArray(numChunks),0,message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4);
 			System.arraycopy(Helper.intToByteArray(requestIndex), 0,message, 13, 4);
+			
 		} else {
 			System.out.println("Error: Payload requested for wrong message id type. Payload can only be done for have, pieces and request ids only.");
 		}
