@@ -50,9 +50,9 @@ public class RUBTClient {
 		/**Start download */
 		int result = startDownload(torrent_File, args[1]);
 		if(result == 1)
-			System.out.println("Tracker failed to respond. Download canceled");
+			System.out.println("Tracker failed to respond. Download canceled.");
 		else if(result == 2)
-			System.out.println("Could not continue download due to errors. Download canceled");
+			System.out.println("Could not continue download due to errors. Download canceled.");
 		else 
 			System.out.println("Finished download");	
 	}
@@ -118,7 +118,7 @@ public class RUBTClient {
 			
 			ConnectToTracker.sendStoppedMessage();
 		} catch (Exception e) {
-			System.out.println("Couldn't send stop event message");
+			System.out.println("Couldn't send stop event message.");
 		}
 		ct.disconnect(); /**Disconnect from tracker*/
 		return 0;
