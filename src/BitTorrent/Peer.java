@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 /**
  * This class connects to a peer and download chunks from the file requested
- * @author Amulya Uppala, Truong Pham
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
  *
  */
 public class Peer {

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 /**
  * This class connects to tracker and returns a decoded tracker response 
- * @author Amulya Uppala, Truong Pham
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
  *
  */
 

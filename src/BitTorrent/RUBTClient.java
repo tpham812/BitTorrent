@@ -11,7 +11,7 @@ import java.util.HashMap;
 
 /**
  * This class starts up the Bit Torrent client and begins download
- * @author Amulya Uppala, Truong Pham
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
  *
  */
 public class RUBTClient {
