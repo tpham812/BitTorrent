@@ -174,7 +174,7 @@ public class ConnectToTracker {
 		toSendToPeerID = peerID.getBytes();
 		String event = "started";
 
-		System.out.println("Sending started event message to Tracker."); 
+		System.out.println("Sending started event message to Tracker.");  
 		do
 		{
 			portNumber++;
