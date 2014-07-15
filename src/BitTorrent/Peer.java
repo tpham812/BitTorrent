@@ -19,19 +19,31 @@ import java.util.Arrays;
  *
  */
 public class Peer {
-
+	/**Socket connection to the peer*/
 	private Socket socket;
+	/**Final file that is output*/
 	private FileOutputStream fileoutput;
+	/**Output stream to the peer*/
 	private DataOutputStream os;
+	/**Input stream from the peer*/
 	private DataInputStream in;
+	/**Torrent Info file that comes from the .torrent file*/
 	private TorrentInfo torrentInfo;
+	/**Info hash of the info about the file to be downloaded from the .torrent file*/
 	private byte[] infoHash;
+	/**IP address of peer*/
 	private String IP;
+	/**Port number of peer*/
 	private int port;
+	/**ID of the peer*/
 	private byte[] ID;
+	/**RUBT Client's id that was sent to tracker and must be sent to peer to identify us*/
 	private byte[] ourID;
+	/**Final name of the output file as given as the second argument to the program*/
 	private String fileOutArg;
+	/**Array of chunks to be stored*/
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+	/**Protocol name and eight zeroes field to write in the handshake message*/
 	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
@@ -61,14 +73,22 @@ public class Peer {
 	 * @throws InterruptedException
 	 */
 	public void downloadFileFromPeer() throws IOException, InterruptedException {
-
+		
+		/**Current chunk being downloaded*/
 		byte[] chunk;
+		/**temporary buffer to place bytes we don't use right now*/
 		byte[] tempBuff;
+		/**last chunk*/
 		int left;
+		/**last chunk's size*/
 		int lastSize;
+		/**keeps track of bytes*/
 		int begin = 0;
+		/**Keeps track of current block number*/
 		int block = 0;
+		/**Message to peer for what block to send.*/
 		Message askForPieces;
+		/**Message to peer telling it that we have received the piece*/
 		Message have;
 		int index = torrentInfo.piece_length; /**Length of piece*/
 
@@ -105,7 +125,7 @@ public class Peer {
 
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
-			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECES
+			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECE
 				askForPieces = new Message(13,(byte)6); 
 				if (lastSize<index){
 					index = lastSize;
@@ -113,10 +133,10 @@ public class Peer {
 					index = torrentInfo.piece_length;
 				}
 				lastSize = lastSize-index; 
-				askForPieces.setPayload(index,begin,block);
+				askForPieces.setPayload(index,begin,block); //ask for piece
 				os.write(askForPieces.message);
 				os.flush();
-				tempBuff = new byte[4];
+				tempBuff = new byte[4];  //remove unnecessary bytes
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
 				}
@@ -138,7 +158,8 @@ public class Peer {
 				}
 				digest.update(chunk);
 				byte[] chunkHash = digest.digest();
-				boolean verify = true;
+				boolean verify = true; 
+				//verify that the sha-1 hashes match with what is in the .torrent file
 				if (trackerHash.length!=chunkHash.length){
 					System.out.println("Error: SHA-1 lengths are not same!");
 					verify = false;
@@ -153,6 +174,7 @@ public class Peer {
 				if (verify == false){
 					block --;
 				}else{
+					//add the chunk and write to the file if correct
 					this.chunks.add(chunk); //add to array
 					fileoutput.write(chunk); //write to file
 					have = new Message(5,(byte)4);
@@ -163,13 +185,13 @@ public class Peer {
 				block++;
 
 			}else{ //still have more pieces left!
+				//ask for the piece
 				askForPieces = new Message(13,(byte)6); 
 				askForPieces.setPayload(index,begin,block);
 
 				os.write(askForPieces.message);
 				os.flush(); //push to output stream.
-
-				//	System.out.println("Avail in ln159: "+in.available()); //number of bytes available to download
+				
 				tempBuff = new byte[4];  //read in first four bytes which we don't use
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
@@ -182,6 +204,7 @@ public class Peer {
 				for (int m = 0 ; m<index;m++){
 					chunk[m]=in.readByte(); 
 				}//read in chunk
+				
 				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
 				MessageDigest digest = null;
 				try {
@@ -193,6 +216,7 @@ public class Peer {
 				digest.update(chunk);
 				byte[] chunkHash = digest.digest();
 				boolean verify = true;
+				//verify that the hashes are correct
 				if (trackerHash.length!=chunkHash.length){
 					System.out.println("Error: SHA-1 lengths are not same!");
 					verify = false;
@@ -205,8 +229,9 @@ public class Peer {
 					}
 				}
 				if (verify == false){
-					//do not decrement block because we need to request again.
+					//do not change block because we need to request again.
 				}else{
+					//add chunk to array and write to file and send have message
 					this.chunks.add(chunk); //add to array
 					fileoutput.write(chunk); //write to file
 					have = new Message(5,(byte)4);
@@ -228,7 +253,8 @@ public class Peer {
 	}
 
 	/**
-	 * Handshake with peer
+	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
+	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
 	 */
 	private void handShake(){
 
@@ -301,8 +327,9 @@ public class Peer {
 	}
 
 	/**
-	 * Read in message from peer
-	 * @return message as byte
+	 * Read in message from peer which are formatted based on message type.
+	 * We need id of the message to identify what type of message was sent. 
+	 * @return message byte as int is returned 
 	 * @throws IOException
 	 */
 	private byte readMessage() throws IOException {
@@ -325,7 +352,7 @@ public class Peer {
 	}
 
 	/** 
-	 * Close connection and streams
+	 * Close connection and streams and output file.
 	 */
 	private void finishConnection() {
 
