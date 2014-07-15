@@ -8,9 +8,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 /**
  * This class starts up the Bit Torrent client and begins download
- * @author Truong Pham
+ * @author Amulya Uppala, Truong Pham
  *
  */
 public class RUBTClient {
@@ -34,7 +35,7 @@ public class RUBTClient {
 		else if (args[0].trim().length()==0){
 			System.out.println("Error: Invalid torrent file name.");
 			return;
-		/**Check if user entered in file name to store picture in*/
+			/**Check if user entered in file name to store picture in*/
 		}else if (args[1].trim().length()==0){
 			System.out.println("Error: Invalid name of file you wish to store data to.");
 			return;
@@ -45,29 +46,29 @@ public class RUBTClient {
 			System.out.println("Error: File not found.");
 			return;
 		}
-		
+
 		System.out.println("Starting download.");
 		/**Start download */
 		startDownload(torrent_File, args[1]);	
 		System.out.println("Finished download.");
 	}
-	
+
 	/**
 	 * Connect to tracker and get a list of peers. Find the right peer and connects to it to begin download
 	 * @param torrent_File Torrent file
 	 * @param fileName File name to store 
 	 */
 	public static void startDownload(File torrent_File, String fileName) {
-		
+
 		HashMap peer_Map = null;
 		ArrayList list = null;
 		String peerID ="", peerIP = "";
 		boolean found = false;
 		int peerPort = 0;
-		
+
 		ConnectToTracker ct = new ConnectToTracker();
 		list = ct.getTrackerResponse(torrent_File, fileName); /**Get tracker response*/
-		
+
 		/**Request new tracker response if peer RU1103 is not found*/
 		do {
 			/**Look for peer RU1103 from list*/
@@ -81,7 +82,7 @@ public class RUBTClient {
 					break;
 				}
 			}
-			
+
 			/**If peer can't be found, sleep and then request a new response from tracker*/
 			if(!found) {
 				try {

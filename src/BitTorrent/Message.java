@@ -1,21 +1,22 @@
 package BitTorrent;
 
+
 public class Message {
-	
+
 	private static final byte MSG_KEEP_ALIVE = -1;
 	private static final byte MSG_CHOKE = 0;
 	private static final byte MSG_UNCHOKE = 1;
 	private static final byte MSG_INTERESTED = 2;
 	private static final byte MSG_NOT_INTERESTED = 3;
 	private static final byte MSG_HAVE = 4;
-    private	static final byte MSG_REQUEST = 6;
+	private	static final byte MSG_REQUEST = 6;
 	private static final byte MSG_PIECE = 7;
 	private byte id;
 	private int lengthPrefix;
 	public byte[] message;
 
 	public Message (int lengthPrefix, byte msgID){
-		
+
 		this.lengthPrefix = lengthPrefix;
 		this.id = msgID;
 		this.message = new byte[this.lengthPrefix + 4];
@@ -58,7 +59,7 @@ public class Message {
 	public void setPayload(int requestIndex, int currentDL, int numChunks) {
 
 		if (id == MSG_HAVE) {
-			System.arraycopy(Helper.intToByteArray(4), 0,message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(numChunks), 0,message, 5, 4);
 		} else if (id == MSG_PIECE) {
 			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4); 

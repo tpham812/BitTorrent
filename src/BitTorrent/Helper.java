@@ -7,6 +7,11 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Random;
+/**
+ * This class holds some helper functions that can be useful in multiple files.
+ * @author Amulya Uppala, Jewel Lim, Truong Pham
+ *
+ */
 
 public class Helper {
 
@@ -17,7 +22,7 @@ public class Helper {
 	 */
 	@SuppressWarnings("resource")
 	public static byte[] getBytesFromFile(File file) {
-		
+
 		InputStream file_stream;
 		byte[] b = new byte[(int)file.length()];
 		try {
@@ -35,7 +40,7 @@ public class Helper {
 	 * @return string formatted in ISO-8859-1 standard
 	 */
 	public static String escape(String s){
-		
+
 		String ret;
 
 		try {
@@ -52,7 +57,7 @@ public class Helper {
 	 * @return ISO formatted peer ID that does not start with RUBT
 	 */
 	public static String generateRandomPeerID() {
-		
+
 		String peerID;
 		//peer id cannot start with RUBT
 		String alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -69,7 +74,7 @@ public class Helper {
 	}
 
 	public static byte[] intToByteArray(int value) {
-		
+
 		byte[] returnValue = new byte[4];
 		returnValue[0] = (byte) (value >> 24);
 		returnValue[1] = (byte) (value >> 16);

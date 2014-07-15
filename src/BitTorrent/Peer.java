@@ -1,5 +1,6 @@
 package BitTorrent;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 /**
  * This class connects to a peer and download chunks from the file requested
- * @author Truong Pham
+ * @author Amulya Uppala, Truong Pham
  *
  */
 public class Peer {
@@ -44,7 +45,7 @@ public class Peer {
 	 * @throws InterruptedException
 	 */
 	public Peer(String ip, byte[] id, int port, String fileOutArg) throws IOException, InterruptedException{
-		
+
 		this.IP = ip;
 		this.ID = id;
 		this.port = port;
@@ -60,7 +61,7 @@ public class Peer {
 	 * @throws InterruptedException
 	 */
 	public void downloadFileFromPeer() throws IOException, InterruptedException {
-		
+
 		byte[] chunk;
 		byte[] tempBuff;
 		int left;
@@ -68,18 +69,19 @@ public class Peer {
 		int begin = 0;
 		int block = 0;
 		Message askForPieces;
+		Message have;
 		int index = torrentInfo.piece_length; /**Length of piece*/
-		
+
 		/**Start handshaking with peer*/
 		handShake(); 
 		Message interested = new Message(1,(byte)2); /**create interested message*/
-		
+
 		System.out.println("Reading message from peer.");
 		int read = readMessage();
 		System.out.println("Finished reading message from peer.");
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ //have or bitfield message being sent. 
-			
+			//part 1 = only have bit field message due to one peer with everything only. 
 			in.readFully(bitField); //get rid of bit field
 		}
 
@@ -91,9 +93,9 @@ public class Peer {
 		System.out.println("Reading message from peer.");
 		read = readMessage();
 		System.out.println("Finished reading message from peer.");
-		if(read == 1) 
+		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
-	
+		}
 
 		left = torrentInfo.piece_hashes.length-1;
 		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);//cuz last pieces might be irregurarly sized
@@ -127,24 +129,37 @@ public class Peer {
 					chunk[m]=in.readByte(); 
 				}//read in chunk
 				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
-                MessageDigest digest = null;
+				MessageDigest digest = null;
 				try {
 					digest = MessageDigest.getInstance("SHA-1");
 				} catch (NoSuchAlgorithmException e) {
-					
+					System.out.println("Error: Could not SHA-1");
+					finishConnection();
 				}
-                digest.update(chunk);
-                byte[] chunkHash = digest.digest();
-                if (trackerHash.length!=chunkHash.length){
-                    System.out.println("Error: SHA-1 lengths are not same!");
-                }
-                for (int d = 0; d<chunkHash.length;d++){
-                    if (chunkHash[d]!=trackerHash[d]){
-                        System.out.println("Error: Hashes are not same!");
-                    }
-                }
-				this.chunks.add(chunk); //add to array
-				fileoutput.write(chunk); //write to file
+				digest.update(chunk);
+				byte[] chunkHash = digest.digest();
+				boolean verify = true;
+				if (trackerHash.length!=chunkHash.length){
+					System.out.println("Error: SHA-1 lengths are not same!");
+					verify = false;
+				}
+				for (int d = 0; d<chunkHash.length;d++){
+					if (chunkHash[d]!=trackerHash[d]){
+						System.out.println("Error: Hashes are not same!");
+						verify = false;
+						break;
+					}
+				}
+				if (verify == false){
+					block --;
+				}else{
+					this.chunks.add(chunk); //add to array
+					fileoutput.write(chunk); //write to file
+					have = new Message(5,(byte)4);
+					have.setPayload(index, begin, block);
+					os.write(have.message);
+					os.flush();//push message to stream
+				}
 				block++;
 
 			}else{ //still have more pieces left!
@@ -168,30 +183,44 @@ public class Peer {
 					chunk[m]=in.readByte(); 
 				}//read in chunk
 				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
-                MessageDigest digest = null;
+				MessageDigest digest = null;
 				try {
 					digest = MessageDigest.getInstance("SHA-1");
 				} catch (Exception e) {
+					System.out.println("Error: Could not SHA-1");
+					finishConnection();
 				}
-                digest.update(chunk);
-                byte[] chunkHash = digest.digest();
-                if (trackerHash.length!=chunkHash.length){
-                    System.out.println("Error: SHA-1 lengths are not same!");
-                }
-                for (int d = 0; d<chunkHash.length;d++){
-                    if (chunkHash[d]!=trackerHash[d]){
-                        System.out.println("Error: Hashes are not same!");
-                    }
-                }
-				this.chunks.add(chunk); //add to array
-				fileoutput.write(chunk); //write to file
-				if (begin+index==torrentInfo.piece_length){
-					block++;
-					begin = 0;
-					//break;
+				digest.update(chunk);
+				byte[] chunkHash = digest.digest();
+				boolean verify = true;
+				if (trackerHash.length!=chunkHash.length){
+					System.out.println("Error: SHA-1 lengths are not same!");
+					verify = false;
+				}
+				for (int d = 0; d<chunkHash.length;d++){
+					if (chunkHash[d]!=trackerHash[d]){
+						System.out.println("Error: Hashes are not same!");
+						verify = false;
+						break;
+					}
+				}
+				if (verify == false){
+					//do not decrement block because we need to request again.
 				}else{
-					begin +=index;
-				}	
+					this.chunks.add(chunk); //add to array
+					fileoutput.write(chunk); //write to file
+					have = new Message(5,(byte)4);
+					have.setPayload(index, begin, block);
+					os.write(have.message);
+					os.flush();//push message to stream
+					if (begin+index==torrentInfo.piece_length){
+						block++;
+						begin = 0;
+						//break;
+					}else{
+						begin +=index;
+					}	
+				}
 			}			
 		}
 		System.out.println("Finished downloading chunks.");
@@ -202,7 +231,7 @@ public class Peer {
 	 * Handshake with peer
 	 */
 	private void handShake(){
-		
+
 		boolean peerInfoGood = true;
 		/**Construct message to send to peer*/
 		byte[] message = new byte[68];
@@ -214,7 +243,7 @@ public class Peer {
 
 		try {
 			System.out.println("Connecting to Peer.");
-			
+
 			/**Open connection by using a socket*/
 			socket = new Socket(IP,port);
 			System.out.println("Connected.");
@@ -240,7 +269,7 @@ public class Peer {
 			in.readFully(peerAns);
 
 			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
-			
+
 			/**checks if peer's info hash returned is same as info has we have from tracker*/
 			for (int i = 0; i<20;i++){
 				if (peerInfoHash[i]!=infoHash[i]){
@@ -266,6 +295,7 @@ public class Peer {
 			}
 		} catch (Exception e) {
 			System.out.println("Error: Could not handshake with peer.");
+			finishConnection();
 		}
 		System.out.println("finished handshake.");
 	}
@@ -276,12 +306,12 @@ public class Peer {
 	 * @throws IOException
 	 */
 	private byte readMessage() throws IOException {
-		
+
 		/**Read in message*/
 		int msgLength = in.readInt();
 		/**Read in id*/
 		byte id = in.readByte();
-		
+
 		//keep-alive
 		if(msgLength == 0){
 			return -1;
@@ -293,12 +323,12 @@ public class Peer {
 		default: return id;
 		}
 	}
-	
+
 	/** 
 	 * Close connection and streams
 	 */
 	private void finishConnection() {
-		
+
 		try {
 			/**Close socket and streams*/
 			socket.close();

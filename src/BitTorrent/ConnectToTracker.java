@@ -12,11 +12,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 /**
  * This class connects to tracker and returns a decoded tracker response 
- * @author Truong Pham
+ * @author Amulya Uppala, Truong Pham
  *
  */
+
 public class ConnectToTracker {
-	
+
 	/**Stores message to be sent to tracker*/
 	private String finalMessage;
 	/**Connection to connect to tracker*/
@@ -69,13 +70,13 @@ public class ConnectToTracker {
 		}
 		return (ArrayList)trackerAnswer.get(KEY_PEERS);
 	}
-	
+
 	/**
 	 * Request a new response from tracker. Sends message to tracker and receive a decoded response
 	 * @return returns a new reponse from tracker in an array list
 	 */
 	public ArrayList requestNewReponse() {
-		
+
 		HashMap trackerAnswer = null;
 		try {
 			/**Send message to tracker */
@@ -87,7 +88,7 @@ public class ConnectToTracker {
 		}
 		return (ArrayList)trackerAnswer.get(KEY_PEERS);
 	}
-	
+
 	/**
 	 * Sends formatted URL message to tracker, connects to tracker and returns the decoded answer of tracker
 	 * @return Decoded message of Tracker as hashmap
@@ -96,7 +97,7 @@ public class ConnectToTracker {
 	 * @throws NoSuchAlgorithmException
 	 */
 	private void sendMessageToTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
-		
+
 		int portNumber = 6880;
 		URL trackerURL = torrentI.announce_url;
 		String peerID = Helper.generateRandomPeerID();
@@ -120,7 +121,7 @@ public class ConnectToTracker {
 			}
 		}while(connection == null);
 	}
-	
+
 	/**
 	 * Receive a message from tracker and return a decoded response
 	 * @return Decoded response in a hash map
@@ -134,16 +135,16 @@ public class ConnectToTracker {
 			BufferedInputStream trackerResponse = new BufferedInputStream(connection.getInputStream());
 			ByteArrayOutputStream temp_output = new ByteArrayOutputStream();
 			byte[] buf = new byte[1];
-			
+
 			/**Read in tracker response*/
 			while (trackerResponse.read(buf)!=-1){
 				temp_output.write(buf);
 			}
-			
+
 			/**Store tracker response in byte array*/
 			byte[] trackerAnswer = temp_output.toByteArray();
 			System.out.println("Starting decoding response.");
-			
+
 			/**Decode tracker response*/
 			tracker_decoded_response =  (HashMap)Bencoder2.decode(trackerAnswer);
 			System.out.println("Finsihed decoding response.");
@@ -154,12 +155,12 @@ public class ConnectToTracker {
 		System.out.println("Got response.");
 		return tracker_decoded_response;
 	}
-	
+
 	/**
 	 * Disconnect from tracker
 	 */
 	public void disconnect() {
-		
+
 		connection.disconnect();
 	}
 }
