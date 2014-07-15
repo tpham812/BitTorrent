@@ -72,7 +72,10 @@ public class Helper {
 		}while (peerID.startsWith("RUBT"));
 		return escape(peerID);
 	}
-
+	
+	/**
+	 * Changes the integer into a big-endian byte array. 
+	 * */
 	public static byte[] intToByteArray(int value) {
 
 		byte[] returnValue = new byte[4];
