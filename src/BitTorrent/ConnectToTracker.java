@@ -71,7 +71,7 @@ public class ConnectToTracker {
 			/**Send message to tracker*/
 			sendMessageToTracker();
 			/**Get tracker response*/
-			trackerAnswer = getMessageFromTracker();
+			trackerAnswer = getMessageFromTracker(); 
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 			return null;
