@@ -18,12 +18,16 @@ import java.util.HashMap;
 
 public class ConnectToTracker {
 
+	/**Stores port number*/
+	private static int portNumber;
+	/**Stores generated peerID*/
+	private static String peerID;
 	/**Stores how much uploaded*/
-	public static int uploaded = 0;
+	private static int uploaded = 0;
 	/**Stores how much downloaded*/
-	public static int downloaded = 0;
+	private static int downloaded = 0;
 	/**Stores how much more need to be downloaded*/
-	public static int left;
+	private static int left;
 	/**Stores tracker URL*/
 	private static URL trackerURL;
 	/**Stores message to be sent to tracker*/
@@ -106,9 +110,9 @@ public class ConnectToTracker {
 	 */
 	private void sendMessageToTracker() throws UnsupportedEncodingException, BencodingException, NoSuchAlgorithmException {
 
-		int portNumber = 6880;
+		portNumber = 6880;
 		trackerURL = torrentI.announce_url;
-		String peerID = Helper.generateRandomPeerID();
+		peerID = Helper.generateRandomPeerID();
 		toSendToPeerID = peerID.getBytes();
 		left = torrentI.file_length;
 
@@ -123,10 +127,43 @@ public class ConnectToTracker {
 				/**Open up connection to tracker*/
 				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
 			} catch (Exception e) {
-				System.out.println("Error: Could not connect to tracker");
+				System.out.println("Error: Could not send message to tracker");
 				return;
 			}
 		}while(connection == null);
+		connection.disconnect(); /**Disconnect from tracker */
+	}
+	
+	/**
+	 * Send even message or regular message to tracker
+	 * @param event Event message to concatenate for GET request
+	 * @param nameEvent Name of the event
+	 * @throws UnsupportedEncodingException
+	 */
+	public static void sendMessageToTracker(String event, String nameEvent) throws UnsupportedEncodingException {
+
+		if(event == null) {
+			System.out.println("Sending message to Tracker.");
+			try {
+				/**Open up connection to tracker*/
+				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
+			} catch (Exception e) {
+				System.out.println("Error: Could not send message to tracker");
+				return;
+			}
+			connection.disconnect(); /**Disconnect from tracker*/
+		}
+		else {
+			System.out.println("Sending " + nameEvent + " event message to Tracker.");
+			try {
+				/**Open up connection to tracker*/
+				connection = (HttpURLConnection) new URL(finalMessage + event).openConnection();
+			} catch (Exception e) {
+				System.out.println("Error: Could not send message to tracker");
+				return;
+			}
+			connection.disconnect(); /**Disconnect from tracker*/
+		}
 	}
 
 	/**
@@ -164,94 +201,11 @@ public class ConnectToTracker {
 	}
 
 	/**
-	 * Send started event message to tracker
-	 * @throws UnsupportedEncodingException
-	 */
-	public static void sendStartedMessage() throws UnsupportedEncodingException {
-		
-		int portNumber = 6880;
-		String peerID = Helper.generateRandomPeerID();
-		toSendToPeerID = peerID.getBytes();
-		String event = "started";
-
-		System.out.println("Sending started event message to Tracker.");  
-		do
-		{
-			portNumber++;
-			/**Message to send to tracker*/
-			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+portNumber+"&uploaded="
-					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event;
-			try {
-				/**Open up connection to tracker*/
-				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
-			} catch (Exception e) {
-				System.out.println("Error: Could not connect to tracker");
-				return;
-			}
-		}while(connection == null);
-	}
-	
-	/**
-	 * Send completed event message to tracker
-	 * @throws UnsupportedEncodingException
-	 */
-	public static void sendCompletedMessage() throws UnsupportedEncodingException {
-		
-		int portNumber = 6880;
-		String peerID = Helper.generateRandomPeerID();
-		toSendToPeerID = peerID.getBytes();
-		String event = "completed";
-
-		System.out.println("Sending completed event message to Tracker.");
-		do
-		{
-			portNumber++;
-			/**Message to send to tracker*/
-			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+portNumber+"&uploaded="
-					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event;
-			try {
-				/**Open up connection to tracker*/
-				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
-			} catch (Exception e) {
-				System.out.println("Error: Could not connect to tracker");
-				return;
-			}
-		}while(connection == null);
-	}
-	/**
-	 * Send stopped event message to tracker
-	 * @throws UnsupportedEncodingException
-	 */
-	public static void sendStoppedMessage() throws UnsupportedEncodingException {
-		
-		int portNumber = 6880;
-		String peerID = Helper.generateRandomPeerID();
-		toSendToPeerID = peerID.getBytes();
-		String event = "stopped";
-
-		System.out.println("Sending stopped event message to Tracker.");
-		do
-		{
-			portNumber++;
-			/**Message to send to tracker*/
-			finalMessage = trackerURL+"?info_hash="+Helper.escape(new String(infoHash.array(),"ISO-8859-1"))+"&peer_id="+peerID+"&port="+portNumber+"&uploaded="
-					+uploaded+"&downloaded="+downloaded+"&left="+left+"&event="+event;
-			try {
-				/**Open up connection to tracker*/
-				connection = (HttpURLConnection) new URL(finalMessage).openConnection();
-			} catch (Exception e) {
-				System.out.println("Error: Could not connect to tracker");
-				return;
-			}
-		}while(connection == null);
-	}
-
-	/**
 	 * Update downloaded and left
 	 * @param amount Amount just downloaded
 	 */
 	public static void updateAmounts(int amount) {
-		
+
 		downloaded = downloaded + amount;
 		left = left - downloaded;
 	}

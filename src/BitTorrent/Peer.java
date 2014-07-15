@@ -6,8 +6,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -123,7 +121,7 @@ public class Peer {
 
 		System.out.println("Started downloading chunks.");
 
-		ConnectToTracker.sendStartedMessage();
+		ConnectToTracker.sendMessageToTracker(Event.sendStartedEvent(), "started");
 		while (block!=torrentInfo.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
 			if (block==torrentInfo.piece_hashes.length-1){ //LAST PIECE
@@ -178,6 +176,7 @@ public class Peer {
 					//add the chunk and write to the file if correct
 					this.chunks.add(chunk); //add to array
 					ConnectToTracker.updateAmounts(chunk.length);
+					ConnectToTracker.sendMessageToTracker(null, null);
 					fileoutput.write(chunk); //write to file
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
@@ -237,6 +236,7 @@ public class Peer {
 					this.chunks.add(chunk); //add to array
 					fileoutput.write(chunk); //write to file
 					ConnectToTracker.updateAmounts(chunk.length);
+					ConnectToTracker.sendMessageToTracker(null, null);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
 					os.write(have.message);
@@ -252,7 +252,7 @@ public class Peer {
 			}			
 		}
 		System.out.println("Finished downloading chunks.");
-		ConnectToTracker.sendCompletedMessage();
+		ConnectToTracker.sendMessageToTracker(Event.sendCompletedEvent(), "completed");
 		finishConnection();
 	}
 

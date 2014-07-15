@@ -116,11 +116,10 @@ public class RUBTClient {
 		}
 		try {
 			
-			ConnectToTracker.sendStoppedMessage();
+			ConnectToTracker.sendMessageToTracker(Event.sendStoppedEvent(), "stopped");
 		} catch (Exception e) {
 			System.out.println("Couldn't send stop event message.");
 		}
-		ct.disconnect(); /**Disconnect from tracker*/
 		return 0;
 	}
 }
