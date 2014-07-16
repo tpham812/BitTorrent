@@ -48,8 +48,9 @@ public class Peer {
 	private String fileOutArg;
 	/**Array of chunks to be stored*/
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	/**Protocol name and eight zeroes field to write in the handshake message*/
+	/**Protocol name to write in the handshake message*/
 	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
+	/**Eight zeroes field to write in the handshake message*/
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
