@@ -59,11 +59,10 @@ public class Helper {
 	public static String generateRandomPeerID() {
 
 		String peerID;
-		//peer id cannot start with RUBT
 		String alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		Random rand = new Random();
 		do{
-			StringBuilder sb = new StringBuilder(20); //length 20
+			StringBuilder sb = new StringBuilder(20);
 			for (int i= 0; i<20;i++){
 				sb.append(alpha.charAt(rand.nextInt(alpha.length())));
 			}
