@@ -98,7 +98,8 @@ public class RUBTClient {
 				}
 				System.out.println("Getting new list");
 				try {
-					list = ct.requestNewReponse(); /**Request new response*/
+					response = ct.requestNewReponse(); /**Request new response*/
+					list = (ArrayList)response.get(ConnectToTracker.KEY_PEERS);
 				} catch (Exception e) {
 					System.out.println("Error: tracker message could not be obtained.");
 					return 2;

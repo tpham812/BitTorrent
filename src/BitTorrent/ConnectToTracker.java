@@ -87,18 +87,18 @@ public class ConnectToTracker {
 	 * Request a new response from tracker. Sends message to tracker and receive a decoded response
 	 * @return returns a new reponse from tracker in an array list
 	 */
-	public ArrayList requestNewReponse() {
+	public HashMap requestNewReponse() {
 
 		HashMap trackerAnswer = null;
 		try {
 			/**Send message to tracker */
-			sendMessageToTracker();
+			sendMessageToTracker(null, null);
 			/**Decoded response from tracker */
 			trackerAnswer = getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 		}
-		return (ArrayList)trackerAnswer.get(KEY_PEERS);
+		return trackerAnswer;
 	}
 
 	/**
