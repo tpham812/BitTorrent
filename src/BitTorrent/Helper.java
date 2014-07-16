@@ -74,7 +74,8 @@ public class Helper {
 	
 	/**
 	 * Changes the integer into a big-endian byte array. 
-	 * */
+	 * @param value Integer to turn into byte array
+	 */
 	public static byte[] intToByteArray(int value) {
 
 		byte[] returnValue = new byte[4];

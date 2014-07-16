@@ -51,11 +51,11 @@ public class ConnectToTracker {
 
 	/**
 	 * Connect to tracker and receive a tracker response
-	 * @param torrent_file 
-	 * @param file
+	 * @param torrent_file Torrent file
+	 * @param file File to save data to
 	 * @return response of the tracker in an array list
 	 */
-	public HashMap getTrackerResponse(File torrent_file, String file) {
+	public HashMap getTrackerResponse(File torrent_file, String fileName) {
 
 		HashMap trackerAnswer = null;
 		System.out.println("Connecting to tracker. Please wait.");
@@ -208,12 +208,5 @@ public class ConnectToTracker {
 
 		downloaded = downloaded + amount;
 		left = left - downloaded;
-	}
-	/**
-	 * Disconnect from tracker
-	 */
-	public void disconnect() {
-
-		connection.disconnect();
 	}
 }

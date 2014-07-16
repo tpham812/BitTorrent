@@ -18,7 +18,7 @@ public class RUBTClient {
 
 	/**
 	 * Main method
-	 * @param args
+	 * @param args Torrent file name and file name to store data to
 	 * @throws NoSuchAlgorithmException
 	 * @throws BencodingException
 	 * @throws UnsupportedEncodingException
@@ -94,7 +94,6 @@ public class RUBTClient {
 					Thread.sleep(5000); /**Sleep*/
 				} catch (Exception e) {
 					System.out.println("Error: Thread is unable to sleep for 5 secs");
-					ct.disconnect();
 					return 2;
 				}
 				System.out.println("Getting new list");
