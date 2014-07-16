@@ -48,7 +48,7 @@ public class RUBTClient {
 		}
 		System.out.println("Starting download.");
 		/**Start download */
-		int result = startDownload(torrent_File, args[1]);
+		int result = startDownload(torrent_File, args[1].trim());
 		if(result == 1)
 			System.out.println("Tracker failed to respond. Download canceled.");
 		else if(result == 2)
