@@ -310,7 +310,7 @@ public class Peer {
 	 * Saves the chunks downloaded to the output file specified by the user's argument.
 	 * */
 	private void saveToFile() throws IOException {
-
+		System.out.println("Writing to File.");
 		try {
 			fileoutput = new FileOutputStream(new File(this.fileOutArg));
 		} catch (FileNotFoundException e) {
@@ -322,6 +322,7 @@ public class Peer {
 		for (int i = 0; i<chunks.size();i++){ /**writes all chunks to file*/
 			fileoutput.write(chunks.get(i));
 		}
+		System.out.println("Done Writing to File.");
 	}
 
 	/**
@@ -433,7 +434,7 @@ public class Peer {
 	 * Close connection and streams and output file.
 	 */
 	private void finishConnection() {
-
+		System.out.println("Closing socket and data streams.");
 		try {
 			/**Close socket and streams*/
 			socket.close();
