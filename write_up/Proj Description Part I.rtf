@@ -45,7 +45,9 @@ Write-Up Documents}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qc{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
 Under Write-Up Folder:}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qc{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
-See UML}
+See }{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
+BT Part I }{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
+UML}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qc{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
 Under Javadocs Folder:}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qc{\b0\rtlch \ltrch\loch\fs22\lang1033\loch\f5
@@ -68,7 +70,7 @@ This is the main class of our program. It checks for two arguments as inputted b
 
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj{\b\rtlch \ltrch\loch\fs24\lang1033\loch\f5
 ConnectToTracker - }{\b0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
-This class connects to the tracker and returns a decoded tracker responses. To decode, it uses the Bencoder2 class that is given.  Utilizing the methods within this class, such as getTrackerResponse, a torrentInfo object is created using as its file name the first argument from the user. By using TorrentInfo.java, the info_hash is obtained and sent to the tracker. In return, the tracker sends a list of peers with their information.  This class also contains methods to let the tracker know the state of each download, such as started, completed and stopped.  There is also a method to update amound downloaded as well as to disconnect from the tracker.}
+This class connects to the tracker and returns a decoded tracker responses. To decode, it uses the Bencoder2 class that is given.  Utilizing the methods within this class, such as getTrackerResponse, a torrentInfo object is created using as its file name the first argument from the user. By using TorrentInfo.java, the info_hash is obtained and sent to the tracker. In return, the tracker sends a list of peers with their information. There is also a method to update amound downloaded as well as to disconnect from the tracker.}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj\b0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
 
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj\b\rtlch \ltrch\loch\fs24\lang1033\loch\f5
@@ -76,6 +78,11 @@ This class connects to the tracker and returns a decoded tracker responses. To d
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj{\b\rtlch \ltrch\loch\fs24\lang1033\loch\f5
 Peer- }{\b0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
 The peer connects the downloading peer to the desired peer and allows for chunk downloading.  This class contains the method for initating the handshake and uses Message.java to interpret incoming messages as well to send outgoing ones after the handshake.  After establishing a connection with the desired peer, the downloading peer receives a bitfield from the desired peer. The downloading client then sends an interested message in order to make the remote host unchoke it. Afterwards, the pieces are downloaded and verified until all chunks are completed. }
+\par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj\rtlch \ltrch\loch
+
+\par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj{\b\ab\rtlch \ltrch\loch\fs24\lang1033\loch\f5
+Event - }{\b0\ab0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
+This class contains methods to let the tracker know the state of each download, such as started, completed and stopped. This is called in the Peer class.}
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj\b0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
 
 \par \pard\plain \s0\nowidctlpar{\*\hyphen2\hyphlead2\hyphtrail2\hyphmax0}\cf0\kerning1\dbch\af7\langfe2052\dbch\af8\afs24\alang1081\loch\f3\fs24\lang1033\qj\b0\rtlch \ltrch\loch\fs24\lang1033\loch\f5
