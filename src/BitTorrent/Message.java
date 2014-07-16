@@ -27,7 +27,7 @@ public class Message {
 	 * This method is the constructor specifies the different message types sent between two peers. 
 	 */
 	public Message (int lengthPrefix, byte msgID){
-
+		/**adds the length prefix and message id needed*/ 
 		this.lengthPrefix = lengthPrefix;
 		this.id = msgID;
 		this.message = new byte[this.lengthPrefix + 4];
@@ -68,15 +68,16 @@ public class Message {
 	}
 
 	/**
-	 * @param requestIndex
-	 * @param currentDL
-	 * @param numChunks
+	 * @param requestIndex The index of the chunk
+	 * @param currentDL Currently downloaded bytes
+	 * @param numChunks The chunk of the data
 	 * 
 	 * This method sets the payload for messages that are type HAVE, REQUEST, or PIECE.
 	 * If it is not one of those messages, it outputs an error.  
+	 * Payloads are specific bytes that are added onto have, piece and request messages that describe the data.
 	 */
 	public void setPayload(int requestIndex, int currentDL, int numChunks) {
-
+		/**Turn the required info into a byte array (big endian) and add it to the message. */
 		if (id == MSG_HAVE) {
 			System.arraycopy(Helper.intToByteArray(numChunks), 0,message, 5, 4);
 			
