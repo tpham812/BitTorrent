@@ -23,7 +23,11 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
  * @author Amulya Uppala, Truong Pham
  *
  */
-public class Peer {
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//Now this class should only be able to do two things = close connections 
+//and initalize the streams for connections
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+public abstract class Peer implements Runnable{
 	/**Socket connection to the peer*/
 	private Socket socket;
 	/**Final file that is output*/
@@ -446,4 +450,5 @@ public class Peer {
 			return;
 		}
 	}
+
 }
