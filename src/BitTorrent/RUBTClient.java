@@ -8,6 +8,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import GUI.TorrentGUI;
+
 
 /**
  * This class starts up the Bit Torrent client and begins download
@@ -26,35 +28,37 @@ public class RUBTClient {
 	 */
 	public static void main(String[] args) throws NoSuchAlgorithmException, BencodingException, UnsupportedEncodingException, MalformedURLException {
 
+		TorrentGUI torrGUI = new TorrentGUI();
 		/**Check if user entered in 2 arguments*/
-		if (args.length!=2){
-			System.out.println("Error: Need 2 arguments; the name of the torrent file and the name of the file to save the data to.");
-			return;
-		} 
-		/**Check if user entered in torrent file*/
-		else if (args[0].trim().length()==0){
-			System.out.println("Error: Invalid torrent file name.");
-			return;
+		//if (args.length!=2){
+	//		System.out.println("Error: Need 2 arguments; the name of the torrent file and the name of the file to save the data to.");
+	//		return;
+	//	} 
+	//	/**Check if user entered in torrent file*/
+	//	else if (args[0].trim().length()==0){
+	//		System.out.println("Error: Invalid torrent file name.");
+	//		return;
 			/**Check if user entered in file name to store picture in*/
-		}else if (args[1].trim().length()==0){
-			System.out.println("Error: Invalid name of file you wish to store data to.");
-			return;
-		}
+	//	}else if (args[1].trim().length()==0){
+	//		System.out.println("Error: Invalid name of file you wish to store data to.");
+	//		return;
+	//	}
 		/**Open torrent file and parse data using torrentInfo.java*/
-		File torrent_File = new File(args[0].trim());
-		if(!torrent_File.exists()) {
-			System.out.println("Error: File not found.");
-			return;
-		}
-		System.out.println("Starting download.");
+	//	File torrent_File = new File(args[0].trim());
+	//	if(!torrent_File.exists()) {
+	//		System.out.println("Error: File not found.");
+	//		return;
+	//	}
+	//	System.out.println("Starting download.");
 		/**Start download */
-		int result = startDownload(torrent_File, args[1].trim());
-		if(result == 1)
-			System.out.println("Tracker failed to respond. Download canceled.");
-		else if(result == 2)
-			System.out.println("Could not continue download due to errors. Download canceled.");
-		else 
-			System.out.println("Finished download");	
+		//int result = startDownload(torrent_File, args[1].trim());
+	//	if(result == 1)
+		//	System.out.println("Tracker failed to respond. Download canceled.");
+	//	else if(result == 2)
+		//	System.out.println("Could not continue download due to errors. Download canceled.");
+	//	else 
+		//	System.out.println("Finished download");	
+	
 	}
 
 	/**
