@@ -108,7 +108,7 @@ public class RUBTClient {
 		}while(!found);
 		try {
 			/**Connect to peer*/
-			Peer peer = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
+			DPeer peer = new DPeer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
 			/**Download file from peer*/
 			peer.downloadFileFromPeer();
 		} catch (Exception e) {

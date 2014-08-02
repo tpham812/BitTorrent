@@ -8,7 +8,7 @@ import java.io.IOException;
  * then run method will upload what we have and close connection
  * See method called upload()
  * */
-public class UPeer extends Peer{
+public class UPeer extends DPeer{
 
 	public UPeer(String ip, byte[] id, int port, String fileOutArg)
 			throws IOException, InterruptedException {
