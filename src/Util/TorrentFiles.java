@@ -5,30 +5,34 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class TorrentFiles {
 
-	private static TreeSet<String> TorrentFilesSet;
-
 	
-	public static void addTorrentFiles(String name) {
+	private static HashMap<String, File> torrents = new HashMap<String, File>();
+	public static void addTorrentFiles(String name, File file) {
 		
-		TorrentFilesSet.add(name);
+		torrents.put(name,file);
 	}
 	
 	public static TreeSet<String> getTorrentFiles() {
-		return TorrentFilesSet;
+		
+		TreeSet<String> set = new TreeSet<String>(torrents.keySet());
+		return set;
 	}
 	public static void Serialize() {
 		
-		if(TorrentFilesSet.size() == 0) return;
+		if(torrents.size() == 0) return;
 		FileOutputStream fos = null;
 		ObjectOutputStream oos = null;
 		try {
 			fos = new FileOutputStream("TorrentFiles.ser");
 			oos = new ObjectOutputStream(fos);
-			oos.writeObject(TorrentFilesSet);
+			oos.writeObject(torrents);
 		} catch (Exception e) {
 			System.out.println("ERROR: Could not serialize file.");
 		} finally {
@@ -50,7 +54,8 @@ public class TorrentFiles {
 		
 		File file = new File("TorrentFiles.ser");
 		if(!file.exists()) {
-			TorrentFilesSet = new TreeSet<String>();
+			torrents = new HashMap<String, File>();
+			CreateTorrentFolder();
 			return;
 		}
 		FileInputStream fis = null;
@@ -58,7 +63,7 @@ public class TorrentFiles {
 		try {
 			fis = new FileInputStream("TorrentFiles.ser");
 			ois = new ObjectInputStream(fis);
-			TorrentFilesSet = (TreeSet<String>)ois.readObject();
+			torrents = (HashMap<String, File>)ois.readObject();
 		} catch(Exception e) {
 			System.out.println("ERROR: Could not deserialize file.");
 		} finally {
@@ -73,5 +78,15 @@ public class TorrentFiles {
 				System.out.println("ERROR: Could not close ObjectInputStream");
 			}
 		}	
+	}
+	
+	private static void CreateTorrentFolder() {
+
+		File newFolder = new File("Torrents");
+		if(!newFolder.exists()) {
+			if(!newFolder.mkdir()) {
+				System.out.println("ERROR: Could not create folder to store torrents.");
+			}
+		}
 	}
 }

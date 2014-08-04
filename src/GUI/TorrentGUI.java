@@ -6,18 +6,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.text.SimpleAttributeSet;
@@ -33,8 +35,9 @@ public class TorrentGUI {
 	JFrame frame, helpFrame;
 	JScrollPane sp;
 	JTextField tf;
+	JFileChooser fc;
 	JList<String> list;
-	JButton help, upload, cancel, close;
+	JButton help, browse, cancel, close;
 	JLabel label;
 	JTextPane errorDescription;
 	ButtonListener listener;
@@ -55,6 +58,7 @@ public class TorrentGUI {
 		frame = new JFrame("Bit Torrent");
 		helpFrame = new JFrame("Help");
 		label = new JLabel("Torrent Files");
+		fc = new JFileChooser();
 		errorDescription = new JTextPane();
 		tf = new JTextField();
 		tf.setEditable(true);
@@ -64,8 +68,8 @@ public class TorrentGUI {
 		frameListener = new FrameListener(this);
 		help = new JButton("?");
 		help.addActionListener(listener);
-		upload = new JButton("Upload");
-		upload.addActionListener(listener);
+		browse = new JButton("Browse");
+		browse.addActionListener(listener);
 		cancel = new JButton("Cancel");
 		close = new JButton("Close");
 		close.addActionListener(listener);
@@ -76,10 +80,10 @@ public class TorrentGUI {
 	private void setupGUI() {
 		
 		TorrentFiles.DeSerialize();
-		TreeSet<String> torrSet = TorrentFiles.getTorrentFiles();
-		String[] torrentFiles = new String[torrSet.size()];
-		torrSet.toArray(torrentFiles);
-		DefaultListModelAction.newList(torrentModel, torrentFiles);
+		//TreeSet<File> torrSet = TorrentFiles.getTorrentFiles();
+	//	String[] torrentFiles = new String[torrSet.size()];
+		//torrSet.toArray(torrentFiles);
+		//DefaultListModelAction.newList(torrentModel, torrentFiles);
 		list = new JList(torrentModel);
 		sp = new JScrollPane(list);
 		sp.setMaximumSize(new Dimension(450, 400));
@@ -98,7 +102,7 @@ public class TorrentGUI {
 		
 		panel[2].add(tf);
 		panel[2].add(Box.createRigidArea(new Dimension(20,0)));
-		panel[2].add(upload);
+		panel[2].add(browse);
 		
 		panel[3].add(Box.createRigidArea(new Dimension(0,10)));
 		panel[3].add(panel[0]);
@@ -139,14 +143,7 @@ public class TorrentGUI {
 		helpFrame.setVisible(false);
 		helpFrame.addWindowListener(frameListener);
 	}
-	
-	public void updateTorrentModel() {
-		
-		TreeSet<String> torrSet = TorrentFiles.getTorrentFiles();
-		String[] torrentFiles = new String[torrSet.size()];
-		torrSet.toArray(torrentFiles);
-		DefaultListModelAction.newList(torrentModel, torrentFiles);
-	}
+
 	
 	@SuppressWarnings("deprecation")
 	public void hideHelpPanel() {
@@ -161,6 +158,7 @@ public class TorrentGUI {
 		helpFrame.setVisible(true);
 		frame.disable();
 	}
+	
 	class ButtonListener implements ActionListener {
 
 		TorrentGUI tGUI;
@@ -172,10 +170,12 @@ public class TorrentGUI {
 		
 		public void actionPerformed(ActionEvent e) {
 			
-			if(e.getSource() == tGUI.upload) {
-				TorrentFiles.addTorrentFiles(tGUI.tf.getText());
-				tGUI.tf.setText(null);
-				tGUI.updateTorrentModel();
+			if(e.getSource() == tGUI.browse) {
+				int value = fc.showOpenDialog(tGUI.frame);
+				File file = null;
+				if(value == JFileChooser.APPROVE_OPTION) {
+					file = fc.getSelectedFile();
+				}
 			}
 			else if(e.getSource() == tGUI.help) {
 				tGUI.showHelpPanel();
