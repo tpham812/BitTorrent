@@ -53,7 +53,7 @@ public class TorrentDownloadInfo {
 		listener = new ButtonListener(this);
 		close = new JButton("Close");
 		close.addActionListener(listener);
-		stop = new JButton("Stop Download");
+		stop = new JButton("Abort");
 		stop.addActionListener(listener);
 		textArea = new JTextPane();
 		textArea.setMinimumSize(new Dimension(250, 200));
