@@ -27,19 +27,19 @@ public class TorrentDownloadInfo {
 	JTextField[] tf;
 	JScrollPane sp;
 	JLabel name, size, downloaded, left, speed;
-	JButton close;
+	JButton close, stop;
 	ButtonListener listener;
 	
 	public TorrentDownloadInfo() {
 		
 		frame = new JFrame("Download Information");
 		messageFrame = new JFrame("Complete");
-		panel = new JPanel[8];
-		for(int i = 0; i < 6; i++) {
+		panel = new JPanel[9];
+		for(int i = 0; i < 7; i++) {
 			panel[i] = new JPanel();
 			panel[i].setLayout(new BoxLayout(panel[i], BoxLayout.X_AXIS));
 		}
-		for(int i = 6; i < 8; i++) {
+		for(int i = 7; i < 9; i++) {
 			panel[i] = new JPanel();
 			panel[i].setLayout(new BoxLayout(panel[i], BoxLayout.Y_AXIS));
 		}
@@ -53,6 +53,8 @@ public class TorrentDownloadInfo {
 		listener = new ButtonListener(this);
 		close = new JButton("Close");
 		close.addActionListener(listener);
+		stop = new JButton("Stop Download");
+		stop.addActionListener(listener);
 		textArea = new JTextPane();
 		textArea.setMinimumSize(new Dimension(250, 200));
 		textArea.setMinimumSize(new Dimension(250, 200));
@@ -83,12 +85,12 @@ public class TorrentDownloadInfo {
 		errorDescription.setMaximumSize(new Dimension(200,115));
 		errorDescription.setBackground(null);
 		close.setAlignmentX(JButton.CENTER_ALIGNMENT);
-		panel[6].setSize(new Dimension(300,200));
-		panel[6].add(Box.createRigidArea(new Dimension (0, 10)));
-		panel[6].add(errorDescription);
-		panel[6].add(close);
-		panel[6].add(Box.createRigidArea(new Dimension(0,20)));
-		messageFrame.add(panel[6]);
+		panel[7].setSize(new Dimension(300,200));
+		panel[7].add(Box.createRigidArea(new Dimension (0, 10)));
+		panel[7].add(errorDescription);
+		panel[7].add(close);
+		panel[7].add(Box.createRigidArea(new Dimension(0,20)));
+		messageFrame.add(panel[7]);
 		messageFrame.setLocationRelativeTo(null);
 		messageFrame.setSize(new Dimension(300, 150));
 		messageFrame.setResizable(false);
@@ -120,26 +122,29 @@ public class TorrentDownloadInfo {
 		panel[5].add(Box.createRigidArea(new Dimension(32,0)));
 		panel[5].add(tf[4]);
 		panel[5].add(Box.createRigidArea(new Dimension(23,0)));
+		panel[6].add(stop);
 		
-		panel[7].add(Box.createRigidArea(new Dimension(0,20)));
-		panel[7].add(panel[0]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,20)));
-		panel[7].add(panel[1]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,10)));
-		panel[7].add(panel[2]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,10)));
-		panel[7].add(panel[3]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,10)));
-		panel[7].add(panel[4]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,10)));
-		panel[7].add(panel[5]);
-		panel[7].add(Box.createRigidArea(new Dimension(0,20)));
+		panel[8].add(Box.createRigidArea(new Dimension(0,20)));
+		panel[8].add(panel[0]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,20)));
+		panel[8].add(panel[1]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,10)));
+		panel[8].add(panel[2]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,10)));
+		panel[8].add(panel[3]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,10)));
+		panel[8].add(panel[4]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,10)));
+		panel[8].add(panel[5]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,20)));
+		panel[8].add(panel[6]);
+		panel[8].add(Box.createRigidArea(new Dimension(0,20)));
 		
-		frame.add(panel[7]);
+		frame.add(panel[8]);
 		frame.pack();
 		frame.setVisible(true);
 		frame.setResizable(false);
-		frame.setSize(new Dimension(350,350));
+		frame.setSize(new Dimension(350,430));
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
@@ -168,7 +173,10 @@ public class TorrentDownloadInfo {
 		}
 		public void actionPerformed(ActionEvent e) {
 			
-			if(e.getSource() == tdi.close) {
+			if(e.getSource() == tdi.stop) {
+				
+			}
+			else if(e.getSource() == tdi.close) {
 				tdi.hideCompletePanel();
 			}
 		}
