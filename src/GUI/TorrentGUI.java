@@ -4,47 +4,36 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.File;
-import java.io.IOException;
-import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-
-import Util.DefaultListModelAction;
-import Util.TorrentFiles;
 
 
 public class TorrentGUI {
 
 	JPanel [] panel = new JPanel[5];
-	JFrame frame, helpFrame;
-	JScrollPane sp;
+	JFrame frame, messageFrame;
 	JTextField tf;
 	JFileChooser fc;
+	FileNameExtensionFilter filter;
 	JList<String> list;
-	JButton help, browse, cancel, close;
+	JButton help, browse, cancel, close, start;
 	JLabel label;
 	JTextPane errorDescription;
 	ButtonListener listener;
-	FrameListener frameListener;
-	DefaultListModel<String> torrentModel; 
 
-	
 	public TorrentGUI() {
 		 
 		for(int i = 0; i < 3; i++) {
@@ -56,16 +45,19 @@ public class TorrentGUI {
 		panel[4] = new JPanel();
 		panel[4].setLayout(new BoxLayout(panel[4], BoxLayout.Y_AXIS));
 		frame = new JFrame("Bit Torrent");
-		helpFrame = new JFrame("Help");
-		label = new JLabel("Torrent Files");
+		messageFrame = new JFrame("Help");
+		label = new JLabel("Select Torrent");
 		fc = new JFileChooser();
+		filter = new FileNameExtensionFilter("Torrents", "torrent");
+		fc.setFileFilter(filter);
 		errorDescription = new JTextPane();
 		tf = new JTextField();
-		tf.setEditable(true);
-		//tf.setBackground(Color.WHITE);
+		tf.setEditable(false);
+		tf.setBackground(Color.WHITE);
 		tf.setMaximumSize(new Dimension(200,20));
 		listener = new ButtonListener(this);
-		frameListener = new FrameListener(this);
+		start = new JButton("Start");
+		start.addActionListener(listener);
 		help = new JButton("?");
 		help.addActionListener(listener);
 		browse = new JButton("Browse");
@@ -73,36 +65,28 @@ public class TorrentGUI {
 		cancel = new JButton("Cancel");
 		close = new JButton("Close");
 		close.addActionListener(listener);
-		torrentModel = new DefaultListModel<String>();
 		setupGUI();
 	}
 	
 	private void setupGUI() {
 		
-		TorrentFiles.DeSerialize();
-		//TreeSet<File> torrSet = TorrentFiles.getTorrentFiles();
-	//	String[] torrentFiles = new String[torrSet.size()];
-		//torrSet.toArray(torrentFiles);
-		//DefaultListModelAction.newList(torrentModel, torrentFiles);
-		list = new JList(torrentModel);
-		sp = new JScrollPane(list);
-		sp.setMaximumSize(new Dimension(450, 400));
 		createHelpDescriptionPanel();
 		createGUI();
 	}
 	
 	private void createGUI() {
 		
-		panel[0].add(Box.createRigidArea(new Dimension(183,0)));
+		panel[0].add(Box.createRigidArea(new Dimension(103,0)));
 		panel[0].add(label);
-		panel[0].add(Box.createRigidArea(new Dimension(150,0)));
+		panel[0].add(Box.createRigidArea(new Dimension(160,0)));
 		panel[0].add(help);
 		
-		panel[1].add(sp);
+		panel[1].add(tf);
+		panel[1].add(Box.createRigidArea(new Dimension(20,0)));
+		panel[1].add(browse);
 		
-		panel[2].add(tf);
-		panel[2].add(Box.createRigidArea(new Dimension(20,0)));
-		panel[2].add(browse);
+		panel[2].add(start);
+		panel[2].add(Box.createRigidArea(new Dimension(85,0)));
 		
 		panel[3].add(Box.createRigidArea(new Dimension(0,10)));
 		panel[3].add(panel[0]);
@@ -115,19 +99,17 @@ public class TorrentGUI {
 		frame.pack();
 		frame.setVisible(true);
 		frame.setResizable(false);
-		frame.setSize(new Dimension(600,600));
+		frame.setSize(new Dimension(400,165));
 		frame.setLocationRelativeTo(null);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.addWindowListener(frameListener);
 	}
 	
 	private void createHelpDescriptionPanel() {
 	
 		SimpleAttributeSet attribs = new SimpleAttributeSet();  
 		StyleConstants.setAlignment(attribs , StyleConstants.ALIGN_CENTER);  
+		errorDescription.setText("Browse through directories and select a torrent file. Click start to begin downloading. Click x on panel to end program.");
 		errorDescription.setParagraphAttributes(attribs, true);
-		
-		errorDescription.setText("Double click on torrent to start downloading. Click upload to upload a torrent. Click X to exit program.");
 		errorDescription.setEditable(false);
 		errorDescription.setMaximumSize(new Dimension(200,115));
 		errorDescription.setBackground(null);
@@ -136,26 +118,24 @@ public class TorrentGUI {
 		panel[4].add(Box.createRigidArea(new Dimension (0, 10)));
 		panel[4].add(errorDescription);
 		panel[4].add(close);
-		helpFrame.add(panel[4]);
-		helpFrame.setLocationRelativeTo(null);
-		helpFrame.setSize(new Dimension(300, 200));
-		helpFrame.setResizable(false);
-		helpFrame.setVisible(false);
-		helpFrame.addWindowListener(frameListener);
+		messageFrame.add(panel[4]);
+		messageFrame.setLocationRelativeTo(null);
+		messageFrame.setSize(new Dimension(300, 200));
+		messageFrame.setResizable(false);
+		messageFrame.setVisible(false);
 	}
-
 	
 	@SuppressWarnings("deprecation")
-	public void hideHelpPanel() {
+	public void hideMessagePanel() {
 		
-		helpFrame.setVisible(false);
+		messageFrame.hide();
 		frame.enable();
-		frame.setVisible(true);
+		frame.show();
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void showHelpPanel() {
-		helpFrame.setVisible(true);
+	public void showMessagePanel() {
+		messageFrame.show();
 		frame.disable();
 	}
 	
@@ -171,48 +151,22 @@ public class TorrentGUI {
 		public void actionPerformed(ActionEvent e) {
 			
 			if(e.getSource() == tGUI.browse) {
-				int value = fc.showOpenDialog(tGUI.frame);
+				int value = tGUI.fc.showOpenDialog(tGUI.frame);
 				File file = null;
 				if(value == JFileChooser.APPROVE_OPTION) {
-					file = fc.getSelectedFile();
+					file = tGUI.fc.getSelectedFile();
+					tGUI.tf.setText(file.getName());
 				}
 			}
+			else if(e.getSource() == tGUI.start) {
+				tGUI.tf.setText(null);
+			}
 			else if(e.getSource() == tGUI.help) {
-				tGUI.showHelpPanel();
+				tGUI.showMessagePanel();
 			}
 			else if(e.getSource() == tGUI.close) {
-				tGUI.hideHelpPanel();
+				tGUI.hideMessagePanel();
 			}
-		}
-	}
-	class FrameListener implements WindowListener {
-		
-		TorrentGUI tGUI;
-		
-		public FrameListener(TorrentGUI tGUI) {
-			
-			this.tGUI = tGUI;
-		}
-
-		public void windowActivated(WindowEvent arg0) {
-		}
-		public void windowClosed(WindowEvent arg0) {	
-		}
-		public void windowClosing(WindowEvent arg0) {
-			
-			if(arg0.getSource() == tGUI.frame)
-				TorrentFiles.Serialize();
-			else if(arg0.getSource() == tGUI.helpFrame)
-				tGUI.hideHelpPanel();
-		}
-		public void windowDeactivated(WindowEvent arg0) {
-			
-		}
-		public void windowDeiconified(WindowEvent arg0) {	
-		}
-		public void windowIconified(WindowEvent arg0) {
-		}
-		public void windowOpened(WindowEvent arg0) {
 		}
 	}
 }
