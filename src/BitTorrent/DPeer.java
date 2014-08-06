@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,11 +24,8 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
  * @author Amulya Uppala, Truong Pham
  *
  */
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//Now this class should only be able to do two things = close connections 
-//and initalize the streams for connections
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-public class DPeer implements Runnable{
+
+public class DPeer extends Peer {
 	/**Socket connection to the peer*/
 	private Socket socket;
 	/**Final file that is output*/
@@ -58,7 +56,11 @@ public class DPeer implements Runnable{
 	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
-
+	/**boolean array of bitfields */
+	private boolean[] bitfield;
+	/**Tells us if we are choked or not*/
+	boolean choked = false;
+	
 	/**
 	 * Constructor that sets fields
 	 * @param ip peer IP
@@ -77,6 +79,14 @@ public class DPeer implements Runnable{
 		this.infoHash = torrentInfo.info_hash.array();
 		this.fileOutArg = fileOutArg;
 		this.ourID = ConnectToTracker.toSendToPeerID;
+		this.bitfield = new boolean[ConnectToTracker.torrentI.piece_hashes.length];
+		
+		synchronized(bitfield){
+			for (int i = 0; i<bitfield.length;i++){
+				bitfield[i]=false;
+			}
+		}
+		
 	}
 
 	/**
@@ -113,8 +123,11 @@ public class DPeer implements Runnable{
 		System.out.println("Finished reading message from peer.");
 		byte[] bitField = new byte[in.available()];
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
-			/**part 1 = only have bit field message due to one peer with everything only. */
 			in.readFully(bitField); /**get rid of bit field*/
+			
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//implement rare piece stuff!!!
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		}
 
 		System.out.println("Writing message to peer.");
@@ -127,6 +140,11 @@ public class DPeer implements Runnable{
 		System.out.println("Finished reading message from peer.");
 		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
+		}else if (read==-5){
+			/**choked and timed out so destory connection*/
+			finishConnection(); //send stopped to tracker??!!
+			return;
+			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		}
 
 		left = torrentInfo.piece_hashes.length-1;
@@ -149,6 +167,8 @@ public class DPeer implements Runnable{
 				askForPieces.setPayload(index,begin,block); /**ask for piece*/
 				os.write(askForPieces.message);
 				os.flush();
+				
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				tempBuff = new byte[4];  /**remove unnecessary bytes*/
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
@@ -194,6 +214,7 @@ public class DPeer implements Runnable{
 					block --;
 				}else{
 					/**add the chunk and write to the file if correct*/
+					this.bitfield[block]=true;
 					this.chunksHashes[block] = ByteBuffer.wrap(chunkHash);
 					this.chunks.add(chunk); /**add to array*/
 					ConnectToTracker.updateAmounts(chunk.length);
@@ -213,6 +234,7 @@ public class DPeer implements Runnable{
 				os.write(askForPieces.message);
 				os.flush(); /**push to output stream.*/
 
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				tempBuff = new byte[4];  /**read in first four bytes which we don't use*/
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=in.readByte();
@@ -259,6 +281,7 @@ public class DPeer implements Runnable{
 					/**do not change block because we need to request again.*/
 				}else{
 					/**add chunk to array and write to file and send have message*/
+					this.bitfield[block]=true;
 					this.chunksHashes[block] = ByteBuffer.wrap(chunkHash);
 					this.chunks.add(chunk); /**add to array*/
 					ConnectToTracker.updateAmounts(chunk.length);
@@ -408,7 +431,27 @@ public class DPeer implements Runnable{
 		}
 		System.out.println("finished handshake.");
 	}
-
+	
+	/**
+	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
+	 * @throws SocketException
+	 */
+	private void gotChocked() throws SocketException{
+		this.choked = true;
+		socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
+		do{
+			try {
+				if (readMessage()==1){
+					System.out.println("Got unchoked before time interval ended.");
+					this.choked=false;
+					return;
+				}
+			} catch (IOException e) {
+				System.out.println("Timed out waiting to be unchoked! Finishing Connection.");
+				return;
+			}
+		}while (choked==true);
+	}
 	/**
 	 * Read in message from peer which are formatted based on message type.
 	 * We need id of the message to identify what type of message was sent. 
@@ -424,10 +467,19 @@ public class DPeer implements Runnable{
 
 		/**keep-alive*/
 		if(msgLength == 0){
-			return -1;
+			return 0;
 		}
 		switch(id){
-		case 7: 
+		case 0://choked
+			System.out.println("Choked on ip: "+this.IP+" on port: "+this.port);
+			gotChocked(); 
+			if (this.choked==true){
+				return -5;
+			}
+		case 1://unchoked
+			this.choked=false;
+			return id;
+		case 7: //piece
 			int index = in.readInt();
 			int begin = in.readInt();	
 		default: return id;
@@ -453,7 +505,12 @@ public class DPeer implements Runnable{
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+		try {
+			downloadFileFromPeer();
+		} catch (Exception e) {
+			System.out.println("Error: Could not download file from peer!");
+		}
+
 		
 	}
 
