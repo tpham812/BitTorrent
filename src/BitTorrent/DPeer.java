@@ -140,7 +140,7 @@ public class DPeer extends Peer {
 		System.out.println("Finished reading message from peer.");
 		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
-		}else if (read==-5){
+		}else if (read==-2){
 			/**choked and timed out so destory connection*/
 			finishConnection(); //send stopped to tracker??!!
 			return;
@@ -467,14 +467,14 @@ public class DPeer extends Peer {
 
 		/**keep-alive*/
 		if(msgLength == 0){
-			return 0;
+			return -1;
 		}
 		switch(id){
 		case 0://choked
 			System.out.println("Choked on ip: "+this.IP+" on port: "+this.port);
 			gotChocked(); 
 			if (this.choked==true){
-				return -5;
+				return -2;
 			}
 		case 1://unchoked
 			this.choked=false;
