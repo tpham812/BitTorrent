@@ -491,7 +491,7 @@ public class DPeer extends Peer {
 	/** 
 	 * Close connection and streams and output file.
 	 */
-	private void finishConnection() {
+	protected void finishConnection() {
 		
 		System.out.println("Closing socket and data streams.");
 		try {

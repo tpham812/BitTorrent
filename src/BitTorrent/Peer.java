@@ -42,7 +42,7 @@ public abstract class Peer implements Runnable{
 	/** 
 	 * Close connection and streams and output file.
 	 */
-	private void finishConnection() {
+	protected void finishConnection() {
 
 		System.out.println("Closing socket and data streams.");
 		try {

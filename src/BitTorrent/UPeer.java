@@ -34,6 +34,8 @@ public class UPeer extends Peer implements Runnable{
 	private byte[] ID;
 	/**Our ID sent to tracker when we were a download peer*/
 	private byte[] ourID;
+	/**Torrent Info file that comes from the .torrent file*/
+	private TorrentInfo torrentInfo;
 	
 	
 	public UPeer(String ip, byte[] id, int port)
@@ -86,7 +88,7 @@ public class UPeer extends Peer implements Runnable{
 			upload();
 			
 		}else{
-			//choke msg (and close connection?)
+			//choke msg 
 			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
 			System.out.println("Writing choke message to peer.");
 			os.write(chokeMsg.message);
@@ -168,18 +170,28 @@ public class UPeer extends Peer implements Runnable{
 		index = in.readInt();
 		begin = in.readInt();
 		length = in.readInt();
+		
+		
 	
 	}
 	
 	
 	public void isStopped() throws IOException{
 		//threads? msg from tracker?
+		//put condition here
+		finishConnection();
 	}
 	
-	// will upload what we have and close the connection 
+
 	public void run() {
 		
-		
+		System.out.println("Uploading to some peer on new thread.");
+		try {
+			upload();
+			finishConnection();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
