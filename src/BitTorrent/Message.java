@@ -8,25 +8,27 @@ package BitTorrent;
 
 public class Message {
 	/** The message id byte that pertains to keep alive when communicating with peer.*/
-	private static final byte MSG_KEEP_ALIVE = -1;
+	public static final byte MSG_KEEP_ALIVE = -1;
 	/** The message id byte that pertains to choke when communicating with peer.*/
-	private static final byte MSG_CHOKE = 0;
+	public static final byte MSG_CHOKE = 0;
 	/** The message id byte that pertains to unchoke when communicating with peer.*/
-	private static final byte MSG_UNCHOKE = 1;
+	public static final byte MSG_UNCHOKE = 1;
 	/** The message id byte that pertains to interested when communicating with peer.*/
-	private static final byte MSG_INTERESTED = 2;
+	public static final byte MSG_INTERESTED = 2;
 	/** The message id byte that pertains to not interested when communicating with peer.*/
-	private static final byte MSG_NOT_INTERESTED = 3;
+	public static final byte MSG_NOT_INTERESTED = 3;
 	/** The message id byte that pertains to have when communicating with peer.*/
-	private static final byte MSG_HAVE = 4;
+	public static final byte MSG_HAVE = 4;
+	/** The message id byte that pertains to bitfield when communicating with peer.*/
+	public static final byte MSG_BITFIELD = 5;
 	/** The message id byte that pertains to request when communicating with peer.*/
-	private	static final byte MSG_REQUEST = 6;
+	public	static final byte MSG_REQUEST = 6;
 	/** The message id byte that pertains to piece when communicating with peer.*/
-	private static final byte MSG_PIECE = 7;
+	public static final byte MSG_PIECE = 7;
 	/** The message id byte.*/
-	private byte id;
+	public byte id;
 	/** Specifies the length of the message*/
-	private int lengthPrefix;
+	public int lengthPrefix;
 	/** The byte array that stores the message to send to peer.*/
 	public byte[] message;
 
@@ -76,6 +78,9 @@ public class Message {
 		default: break;
 		}
 	}
+	
+	
+	
 
 	/**
 	 * @param requestIndex The index of the chunk

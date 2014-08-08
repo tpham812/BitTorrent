@@ -18,64 +18,82 @@ import java.util.ArrayList;
 //Jewel's Notes: How do we randomly select who is optimistically unchoked?
 
 
-public class UPeer implements Runnable{
+public class UPeer extends Peer implements Runnable{
 	
 	/**Socket connection to the peer*/
 	private Socket socket;
-	/**Final file that is output*/
-	private FileOutputStream fileoutput;
 	/**Output stream to the peer*/
 	private DataOutputStream os;
 	/**Input stream from the peer*/
 	private DataInputStream in;
-	/**Torrent Info file that comes from the .torrent file*/
-	private TorrentInfo torrentInfo;
-	/**Info hash of the info about the file to be downloaded from the .torrent file*/
-	private byte[] infoHash;
 	/**IP address of peer*/
 	private String IP;
 	/**Port number of peer*/
 	private int port;
 	/**ID of the peer*/
 	private byte[] ID;
-	/**RUBT Client's id that was sent to tracker and must be sent to peer to identify us*/
+	/**Our ID sent to tracker when we were a download peer*/
 	private byte[] ourID;
-	/**Protocol name to write in the handshake message*/
-	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
-	/**Eight zeroes field to write in the handshake message*/
-	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 	
 	
 	public UPeer(String ip, byte[] id, int port)
 			throws IOException, InterruptedException {
 		
-		this.IP = ip;
+		super(ip, port);
 		this.ID = id;
-		this.port = port;
-		//this.torrentInfo = ConnectToTracker.torrentI;
-		this.infoHash = torrentInfo.info_hash.array();
-		this.ourID = ConnectToTracker.toSendToPeerID;
+		
+		//initiate socket connection somewhere here
 		
 	}
 	
 	
-	public void receiveHandshake() throws IOException{
+	public void receiveHandshake(byte[] info_hash) throws IOException{
+		//read handshake from download peer
+		byte[] receiveHandshake =  new byte[68];
+		in.readFully(receiveHandshake);
+			
 		//send handshake back
-		byte[] message = new byte[68];
-		message[0] = (byte)19;
-		System.arraycopy(BitProtocol, 0,message,1,19);
-		System.arraycopy(eightZeros, 0, message, 20, 8);
-		System.arraycopy(infoHash,0, message, 28, 20);
-		System.arraycopy(ourID, 0, message, 48, 20);
+		byte[] returnShake = new byte[68];
+		returnShake[0] = (byte)19;
+		System.arraycopy(BitProtocol, 0,returnShake,1,19);
+		System.arraycopy(eightZeros, 0, returnShake, 20, 8);
+		System.arraycopy(info_hash,0, returnShake, 28, 20);
+		System.arraycopy(ourID, 0, returnShake, 48, 20);
 		
-		//send bitfield message
+		if(receiveHandshake[0] != (byte) 19){
+			System.out.println("Not a Bit Torrent Protocol.");
+		} else{
+			os.write(returnShake);
+			os.flush();
+		}
+		
+		//send bitfield message before unchoke
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		System.out.println("Sending bitfield message to peer.");
 		os.write(bitfieldMsg.message);
 		os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
 
-		upload();
+		
+		//does not upload if not unchoked
+		boolean isUnchoked = unchoke();
+		if(isUnchoked){
+			Message unchokeMsg = new Message(1,(byte)1); /**create unchoke message*/
+			System.out.println("Writing unchoke message to peer.");
+			os.write(unchokeMsg.message);
+			os.flush();/**push message to stream*/
+			System.out.println("Finished unchoke writing message to peer.");
+			upload();
+			
+		}else{
+			//choke msg (and close connection?)
+			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
+			System.out.println("Writing choke message to peer.");
+			os.write(chokeMsg.message);
+			os.flush();/**push message to stream*/
+			System.out.println("Finished writing message to peer.");
+ 		}
+		
 		
 	}
 	
@@ -103,17 +121,17 @@ public class UPeer implements Runnable{
 	}
 	
 	//if user has bitfield or have messages and is interested, unchoke.
-	//This does not account for the optimistically unchoked. 
+	//This does not account for the optimistically unchoked. Implement 30sec thread!
   	public boolean unchoke() throws IOException{
   		
 		int msgIDfrPeer = readMessage();
-  		if (msgIDfrPeer == 2){
+  		if (msgIDfrPeer == Message.MSG_INTERESTED){
   			System.out.println("Peer is interested.");	
   			int msgIDfrPeer2 = readMessage();  			
   			//byte[] bitFieldOrHaveMsg = new byte[in.available()];
   			//in.readFully(bitFieldOrHaveMsg); /**get rid of bit field*/  			
-  			if(msgIDfrPeer2 == 4 || msgIDfrPeer2 == 5){
-  				System.out.println("Peer has something to share!");
+  			if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
+  				System.out.println("Peer has something to share! Do not choke.");
   				return true;	
   			}
   			return false;
@@ -127,50 +145,35 @@ public class UPeer implements Runnable{
 	 * @throws IOException 
 	 * */
 	public void upload() throws IOException{
+		Message pieceMsg;
+		byte[] block;
+		int index, begin, length;
 		
-		boolean isUnchoked = unchoke();
-		
-		if(isUnchoked){
-			Message unchokeMsg = new Message(1,(byte)1); /**create unchoke message*/
-			System.out.println("Writing unchoke message to peer.");
-			os.write(unchokeMsg.message);
-			os.flush();/**push message to stream*/
-			System.out.println("Finished unchoke writing message to peer.");
+		int msg = readMessage();
+		if(msg == Message.MSG_HAVE || msg == Message.MSG_REQUEST){
 			
-			//upload
-			/*When we, the downloading peer, have the complete file,
-			 * we let the tracker know and automatically upload the file to be shared.
-			 * we become an upload peer. How do implement this? */			
-			
-			
-			
-		}else{
-			//choke msg (and close connection?)
-			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
-			System.out.println("Writing choke message to peer.");
-			os.write(chokeMsg.message);
-			os.flush();/**push message to stream*/
-			System.out.println("Finished writing message to peer.");
-			//finishConnection();
+			if(msg == Message.MSG_HAVE){
+			try {
+				// read the next request
+				msg = readMessage(); 
+			} catch (Exception e) {
+				// no following messages
+				return;
+				}
+			}
+		} else {
+			// other messages received
 		}
 		
+		index = in.readInt();
+		begin = in.readInt();
+		length = in.readInt();
+	
 	}
 	
-	/** 
-	 * Close connection and streams and output file.
-	 */
-	private void finishConnection() {
-		System.out.println("Closing socket and data streams.");
-		try {
-			/**Close socket and streams*/
-			socket.close();
-			in.close();
-			os.close();
-			fileoutput.close();
-		} catch (Exception e) {
-			System.out.println("Error: Could not close data streams!");
-			return;
-		}
+	
+	public void isStopped() throws IOException{
+		//threads? msg from tracker?
 	}
 	
 	// will upload what we have and close the connection 
@@ -179,5 +182,6 @@ public class UPeer implements Runnable{
 		
 		
 	}
+	
 
 }

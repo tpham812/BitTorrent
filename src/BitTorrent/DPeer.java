@@ -72,6 +72,7 @@ public class DPeer extends Peer {
 	 */
 	public DPeer(String ip, byte[] id, int port, String fileOutArg) throws IOException, InterruptedException{
 
+		super(ip, port);
 		this.IP = ip;
 		this.ID = id;
 		this.port = port;
@@ -436,7 +437,7 @@ public class DPeer extends Peer {
 	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
 	 * @throws SocketException
 	 */
-	private void gotChocked() throws SocketException{
+	private void gotChoked() throws SocketException{
 		this.choked = true;
 		socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
 		do{
@@ -472,7 +473,7 @@ public class DPeer extends Peer {
 		switch(id){
 		case 0://choked
 			System.out.println("Choked on ip: "+this.IP+" on port: "+this.port);
-			gotChocked(); 
+			gotChoked(); 
 			if (this.choked==true){
 				return -2;
 			}
@@ -486,10 +487,12 @@ public class DPeer extends Peer {
 		}
 	}
 
+
 	/** 
 	 * Close connection and streams and output file.
 	 */
 	private void finishConnection() {
+		
 		System.out.println("Closing socket and data streams.");
 		try {
 			/**Close socket and streams*/
@@ -502,6 +505,7 @@ public class DPeer extends Peer {
 			return;
 		}
 	}
+	
 
 	@Override
 	public void run() {

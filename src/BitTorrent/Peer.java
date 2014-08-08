@@ -1,5 +1,12 @@
 package BitTorrent;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
 public abstract class Peer implements Runnable{ 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//put all of the important fields betweeen upeer and dpeer here
@@ -8,9 +15,48 @@ public abstract class Peer implements Runnable{
 	//what else can it do?
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-	//public Peer (String ip, int port){
-			
-	//}
+	public int port;
+	public String ip;
+	public DataOutputStream os = null;
+	public DataInputStream in = null;
+//	public OutputStream os = null;
+//	public InputStream in = null;
+	/**Socket connection to the peer*/
+	private Socket socket;
+	protected final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
+	/**Eight zeroes field to write in the handshake message*/
+	protected final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
+
+
+	public Peer(String ip, int port) {
+		this.port = port;
+		this.ip = ip;
+	}
+	
+	
+	
+	
+	
+	
+	
+	/** 
+	 * Close connection and streams and output file.
+	 */
+	private void finishConnection() {
+
+		System.out.println("Closing socket and data streams.");
+		try {
+			/**Close socket and streams*/
+			socket.close();
+			in.close();
+			os.close();
+		} catch (Exception e) {
+			System.out.println("Error: Could not close data streams!");
+			return;
+		}
+	}
+	
+	
 	
 	
 
