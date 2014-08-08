@@ -39,7 +39,7 @@ public class ConnectToTracker {
 	/**Stores infohash*/
 	public static ByteBuffer infoHash;
 	/**Generated peer ID*/
-	public static byte[] toSendToPeerID;
+	public static byte[] ourPeerID;
 	/**Key used to retrieve peer list*/
 	public final static ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[]{ 'p', 'e', 'e', 'r','s'});
 	/**Key used to retrieve peer port number*/
@@ -113,7 +113,7 @@ public class ConnectToTracker {
 		portNumber = 6880;
 		trackerURL = torrentI.announce_url;
 		peerID = Helper.generateRandomPeerID();
-		toSendToPeerID = peerID.getBytes();
+		ourPeerID = peerID.getBytes();
 		left = torrentI.file_length;
 
 		System.out.println("Sending message to Tracker.");

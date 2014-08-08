@@ -50,8 +50,8 @@ public class UPeer implements Runnable{
 		if(receiveHandshake[0] != (byte) 19){
 			System.out.println("Not a Bit Torrent Protocol.");
 		} else{
-			os.write(returnShake);
-			os.flush();
+			Peer.os.write(returnShake);
+			Peer.os.flush();
 		}
 		
 		//send bitfield message before unchoke
@@ -76,8 +76,8 @@ public class UPeer implements Runnable{
 			//choke msg 
 			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
 			System.out.println("Writing choke message to peer.");
-			os.write(chokeMsg.message);
-			os.flush();/**push message to stream*/
+			Peer.os.write(chokeMsg.message);
+			Peer.os.flush();/**push message to stream*/
 			System.out.println("Finished writing message to peer.");
  		}
 		
@@ -89,9 +89,9 @@ public class UPeer implements Runnable{
 
 		
 		/**Read in message*/
-		int msgLength = in.readInt();
+		int msgLength = Peer.is.readInt();
 		/**Read in id*/
-		byte id = in.readByte();
+		byte id = Peer.is.readByte();
 
 		/**keep-alive*/
 		if(msgLength == 0){
@@ -99,8 +99,8 @@ public class UPeer implements Runnable{
 		}
 		switch(id){
 		case 7: 
-			int index = in.readInt();
-			int begin = in.readInt();	
+			int index = Peer.is.readInt();
+			int begin = Peer.is.readInt();	
 		default: return id;
 		}
 		
@@ -152,9 +152,9 @@ public class UPeer implements Runnable{
 			// other messages received
 		}
 		
-		index = in.readInt();
-		begin = in.readInt();
-		length = in.readInt();
+		index = Peer.is.readInt();
+		begin = Peer.is.readInt();
+		length = Peer.is.readInt();
 		
 		
 	
