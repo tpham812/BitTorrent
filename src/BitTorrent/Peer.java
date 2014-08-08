@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public abstract class Peer implements Runnable{ 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -39,7 +40,11 @@ public abstract class Peer implements Runnable{
 	}
 	
 	
-	
+	public static void connectedPeers(){
+		ArrayList<String> connectedPeer = new ArrayList<String>();
+		//Need to find a way to store choked and unchoked connections
+		ArrayList<String> chokedPeer = new ArrayList<String>();
+	}
 	
 	
 	/** 
@@ -57,6 +62,9 @@ public abstract class Peer implements Runnable{
 			System.out.println("Error: Could not close data streams!");
 			return;
 		}
+		
+		
+		
 	}
 	
 	

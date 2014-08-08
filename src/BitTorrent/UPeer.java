@@ -16,8 +16,8 @@ import java.util.ArrayList;
  * */
 
 
-//!!!!!!!!!Jewel's Notes: How do we randomly select who is optimistically unchoked?
-//!!!!!!!!!AND how do we keep tracked of choked/unchoked peers? 
+//!!!!!!!!!Jewel's Notes: Need to implement optimistically unchoked!!!!!
+//!!!!!!!!!AND how do we keep tracked of choked/unchoked peers? !!!!
 
 
 public class UPeer extends Peer implements Runnable{
