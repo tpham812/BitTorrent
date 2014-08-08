@@ -17,9 +17,9 @@ public class Peer {
 	public int port;
 	public byte[] id;
 	public String ip;
-	public DataOutputStream os;
-	public DataInputStream is;
-	public byte[] ourID;
+	public static DataOutputStream os;
+	public static DataInputStream is;
+	public static byte[] ourID;
 	public byte[] bitField;
 	public boolean[] boolBitField;
 	/**Socket connection to the peer*/

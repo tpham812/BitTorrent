@@ -22,23 +22,7 @@ import java.util.ArrayList;
 
 public class UPeer implements Runnable{
 	
-	/**Socket connection to the peer*/
-	private Socket socket;
-	/**Output stream to the peer*/
-	private DataOutputStream os;
-	/**Input stream from the peer*/
-	private DataInputStream in;
-	/**IP address of peer*/
-	private String IP;
-	/**Port number of peer*/
-	private int port;
-	/**ID of the peer*/
-	private byte[] ID;
-	/**Our ID sent to tracker when we were a download peer*/
-	private byte[] ourID;
-	/**Torrent Info file that comes from the .torrent file*/
-	private TorrentInfo torrentInfo;
-	
+
 	private Peer peer;
 	
 	private FileChunks fc;
@@ -53,15 +37,15 @@ public class UPeer implements Runnable{
 	public void receiveHandshake(byte[] info_hash) throws IOException{
 		//read handshake from download peer
 		byte[] receiveHandshake =  new byte[68];
-		in.readFully(receiveHandshake);
+		Peer.is.readFully(receiveHandshake);
 			
 		//send handshake back
 		byte[] returnShake = new byte[68];
 		returnShake[0] = (byte)19;
-		System.arraycopy(BitProtocol, 0,returnShake,1,19);
-		System.arraycopy(eightZeros, 0, returnShake, 20, 8);
+		System.arraycopy(Peer.BitProtocol, 0,returnShake,1,19);
+		System.arraycopy(Peer.eightZeros, 0, returnShake, 20, 8);
 		System.arraycopy(info_hash,0, returnShake, 28, 20);
-		System.arraycopy(ourID, 0, returnShake, 48, 20);
+		System.arraycopy(Peer.ourID, 0, returnShake, 48, 20);
 		
 		if(receiveHandshake[0] != (byte) 19){
 			System.out.println("Not a Bit Torrent Protocol.");
@@ -73,8 +57,8 @@ public class UPeer implements Runnable{
 		//send bitfield message before unchoke
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		System.out.println("Sending bitfield message to peer.");
-		os.write(bitfieldMsg.message);
-		os.flush();/**push message to stream*/
+		Peer.os.write(bitfieldMsg.message);
+		Peer.os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
 
 		
@@ -83,8 +67,8 @@ public class UPeer implements Runnable{
 		if(isUnchoked){
 			Message unchokeMsg = new Message(1,(byte)1); /**create unchoke message*/
 			System.out.println("Writing unchoke message to peer.");
-			os.write(unchokeMsg.message);
-			os.flush();/**push message to stream*/
+			Peer.os.write(unchokeMsg.message);
+			Peer.os.flush();/**push message to stream*/
 			System.out.println("Finished unchoke writing message to peer.");
 			upload();
 			
