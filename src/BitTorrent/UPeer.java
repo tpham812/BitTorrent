@@ -20,7 +20,7 @@ import java.util.ArrayList;
 //!!!!!!!!!AND how do we keep tracked of choked/unchoked peers? !!!!
 
 
-public class UPeer extends Peer implements Runnable{
+public class UPeer implements Runnable{
 	
 	/**Socket connection to the peer*/
 	private Socket socket;
@@ -39,17 +39,16 @@ public class UPeer extends Peer implements Runnable{
 	/**Torrent Info file that comes from the .torrent file*/
 	private TorrentInfo torrentInfo;
 	
+	private Peer peer;
 	
-	public UPeer(String ip, byte[] id, int port)
-			throws IOException, InterruptedException {
+	private FileChunks fc;
+	
+	
+	public UPeer(Peer peer, FileChunks fc) throws IOException, InterruptedException {
 		
-		super(ip, port);
-		this.ID = id;
-		
-		//initiate socket connection somewhere here
-		
+		this.peer = peer;
+		this.fc = fc;
 	}
-	
 	
 	public void receiveHandshake(byte[] info_hash) throws IOException{
 		//read handshake from download peer
@@ -181,7 +180,7 @@ public class UPeer extends Peer implements Runnable{
 	public void isStopped() throws IOException{
 		//threads? msg from tracker?
 		//put condition here
-		finishConnection();
+		//finishConnection();
 	}
 	
 
@@ -190,7 +189,7 @@ public class UPeer extends Peer implements Runnable{
 		System.out.println("Uploading to some peer on new thread.");
 		try {
 			upload();
-			finishConnection();
+			//finishConnection();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

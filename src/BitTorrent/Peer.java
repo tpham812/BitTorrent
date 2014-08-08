@@ -2,13 +2,10 @@ package BitTorrent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public abstract class Peer implements Runnable{ 
+public class Peer { 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//put all of the important fields betweeen upeer and dpeer here
 	//shorten the giant constructors in both of them!!???
@@ -16,59 +13,54 @@ public abstract class Peer implements Runnable{
 	//what else can it do?
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
+	boolean isChoked;
 	public int port;
+	public byte[] id;
 	public String ip;
-	public DataOutputStream os = null;
-	public DataInputStream in = null;
-//	public static TorrentInfo torrentInfo = null;
-//	public OutputStream os = null;
-//	public InputStream in = null;
+	public DataOutputStream os;
+	public DataInputStream is;
+	public byte[] ourID;
+	public byte[] bitField;
+	public boolean[] boolBitField;
 	/**Socket connection to the peer*/
-	private Socket socket;
+	public Socket socket;
 	protected final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	/**Eight zeroes field to write in the handshake message*/
 	protected final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 
-	public Peer(String ip, int port) {
+	public Peer(String ip, byte[] id, int port) {
 		this.port = port;
 		this.ip = ip;
 	}
 	
+	/** Handshake to peer */
 	public void openConnection(Socket socket) throws Exception {
 		//open connection to peers
 	}
 	
-	
-	public static void connectedPeers(){
-		ArrayList<String> connectedPeer = new ArrayList<String>();
-		//Need to find a way to store choked and unchoked connections
-		ArrayList<String> chokedPeer = new ArrayList<String>();
+	/** Get bitfield from peer */
+	/** If wrong bit field size make bitfield null */
+	public void getBitField() {
+		
 	}
 	
+	/** Converts bitfield byte array to boolean array */
+	public void toBooleanArray() {
+		
+	}
 	
-	/** 
-	 * Close connection and streams and output file.
-	 */
-	protected void finishConnection() {
+	public void closeConnection() {
 
 		System.out.println("Closing socket and data streams.");
 		try {
 			/**Close socket and streams*/
 			socket.close();
-			in.close();
+			is.close();
 			os.close();
 		} catch (Exception e) {
 			System.out.println("Error: Could not close data streams!");
 			return;
-		}
-		
-		
-		
+		}	
 	}
-	
-	
-	
-	
-
 }

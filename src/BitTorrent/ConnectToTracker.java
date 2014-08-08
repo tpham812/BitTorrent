@@ -35,9 +35,9 @@ public class ConnectToTracker {
 	/**Connection to connect to tracker*/
 	private static HttpURLConnection connection;
 	/**TorrentInfo to access torrent information*/
-	public static TorrentInfo torrentI; 
+	public static  TorrentInfo torrentI; 
 	/**Stores infohash*/
-	private static ByteBuffer infoHash;
+	public static ByteBuffer infoHash;
 	/**Generated peer ID*/
 	public static byte[] toSendToPeerID;
 	/**Key used to retrieve peer list*/

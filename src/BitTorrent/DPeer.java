@@ -25,42 +25,21 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
  *
  */
 
-public class DPeer extends Peer {
-	/**Socket connection to the peer*/
-	private Socket socket;
+public class DPeer implements Runnable {
+	
 	/**Final file that is output*/
 	private FileOutputStream fileoutput;
-	/**Output stream to the peer*/
-	private DataOutputStream os;
-	/**Input stream from the peer*/
-	private DataInputStream in;
-	/**Torrent Info file that comes from the .torrent file*/
-	private TorrentInfo torrentInfo;
-	/**Info hash of the info about the file to be downloaded from the .torrent file*/
-	private byte[] infoHash;
-	/**IP address of peer*/
-	private String IP;
-	/**Port number of peer*/
-	private int port;
-	/**ID of the peer*/
-	private byte[] ID;
-	/**RUBT Client's id that was sent to tracker and must be sent to peer to identify us*/
-	private byte[] ourID;
 	/**Final name of the output file as given as the second argument to the program*/
 	private String fileOutArg;
 	/**Array of chunks to be stored*/
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	/**Protocol name to write in the handshake message*/
-	private final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
-	/**Eight zeroes field to write in the handshake message*/
-	private final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
-	/**boolean array of bitfields */
-	private boolean[] bitfield;
-	/**Tells us if we are choked or not*/
-	boolean choked = false;
 	
+	private Peer peer;
+	
+	private FileChunks fc;	
+
 	/**
 	 * Constructor that sets fields
 	 * @param ip peer IP
@@ -70,24 +49,10 @@ public class DPeer extends Peer {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public DPeer(String ip, byte[] id, int port, String fileOutArg) throws IOException, InterruptedException{
+	public DPeer(Peer peer, FileChunks fc) throws IOException, InterruptedException{
 
-		super(ip, port);
-		this.IP = ip;
-		this.ID = id;
-		this.port = port;
-		this.torrentInfo = ConnectToTracker.torrentI;
-		this.infoHash = torrentInfo.info_hash.array();
-		this.fileOutArg = fileOutArg;
-		this.ourID = ConnectToTracker.toSendToPeerID;
-		this.bitfield = new boolean[ConnectToTracker.torrentI.piece_hashes.length];
-		
-		synchronized(bitfield){
-			for (int i = 0; i<bitfield.length;i++){
-				bitfield[i]=false;
-			}
-		}
-		
+		this.peer = peer;
+		this.fc = fc;
 	}
 
 	/**
@@ -334,24 +299,6 @@ public class DPeer extends Peer {
 		return true;
 	}
 
-	/**
-	 * Saves the chunks downloaded to the output file specified by the user's argument.
-	 * */
-	private void saveToFile() throws IOException {
-		System.out.println("Writing to File.");
-		try {
-			fileoutput = new FileOutputStream(new File(this.fileOutArg));
-		} catch (FileNotFoundException e) {
-			System.out.println("Error: could not open file to save data to.");
-			socket.close();
-			in.close();
-			os.close();
-		}
-		for (int i = 0; i<chunks.size();i++){ /**writes all chunks to file*/
-			fileoutput.write(chunks.get(i));
-		}
-		System.out.println("Done Writing to File.");
-	}
 
 	/**
 	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
@@ -488,25 +435,6 @@ public class DPeer extends Peer {
 	}
 
 
-	/** 
-	 * Close connection and streams and output file.
-	 */
-	protected void finishConnection() {
-		
-		System.out.println("Closing socket and data streams.");
-		try {
-			/**Close socket and streams*/
-			socket.close();
-			in.close();
-			os.close();
-			fileoutput.close();
-		} catch (Exception e) {
-			System.out.println("Error: Could not close data streams!");
-			return;
-		}
-	}
-	
-
 	@Override
 	public void run() {
 		try {
@@ -514,8 +442,5 @@ public class DPeer extends Peer {
 		} catch (Exception e) {
 			System.out.println("Error: Could not download file from peer!");
 		}
-
-		
 	}
-
 }
