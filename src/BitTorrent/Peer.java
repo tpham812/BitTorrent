@@ -19,6 +19,7 @@ public abstract class Peer implements Runnable{
 	public String ip;
 	public DataOutputStream os = null;
 	public DataInputStream in = null;
+//	public static TorrentInfo torrentInfo = null;
 //	public OutputStream os = null;
 //	public InputStream in = null;
 	/**Socket connection to the peer*/
@@ -33,7 +34,9 @@ public abstract class Peer implements Runnable{
 		this.ip = ip;
 	}
 	
-	
+	public void openConnection(Socket socket) throws Exception {
+		//open connection to peers
+	}
 	
 	
 	

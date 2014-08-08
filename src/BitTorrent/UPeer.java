@@ -15,7 +15,9 @@ import java.util.ArrayList;
  * See method called upload()
  * */
 
-//Jewel's Notes: How do we randomly select who is optimistically unchoked?
+
+//!!!!!!!!!Jewel's Notes: How do we randomly select who is optimistically unchoked?
+//!!!!!!!!!AND how do we keep tracked of choked/unchoked peers? 
 
 
 public class UPeer extends Peer implements Runnable{
