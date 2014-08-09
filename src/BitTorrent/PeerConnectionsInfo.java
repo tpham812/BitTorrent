@@ -6,21 +6,12 @@ import java.util.List;
 
 public class PeerConnectionsInfo {
 
-	public static int uploadConnections;
-	public static int downloadConnections;
+	public static int uploadConnections = 0;
+	public static int downloadConnections = 0;
 
-	public static List<Peer> uploadPeers;
-	public static List<Peer> downloadPeers;
+	public static List<Peer> unchokedPeers = new ArrayList<Peer>();
+	public static List<Peer> chokedPeers = new ArrayList<Peer>();
+	public static List<Peer> downloadPeers = new ArrayList<Peer>();
 	
 	public static HashMap<byte[],Peer> peers = new HashMap<byte[], Peer>();
-	
-	byte[] bitfield; 
-	public PeerConnectionsInfo() {
-		uploadConnections = 0;
-		downloadConnections = 0;
-		uploadPeers = new ArrayList<Peer>();
-		downloadPeers = new ArrayList<Peer>();
-	}
-	
-	
 }
