@@ -14,17 +14,34 @@ public class FileChunks {
 	private String fileOutArg;
 	/**Array of chunks to be stored*/
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	
-	public byte[] ourBitField;
+	/**Boolean version of our bitfield which will be the most up to date by the download peer*/
+	public static boolean[] ourBitField;
 	
 	
 	public FileChunks(String fileName) {
-		
+		this.fileOutArg = fileName;
 	}
+
+	
+	/**
+	 * COnverts the boolean bit field to a byte array for upload peer.
+	 * */
+	public byte[] booleanToByteBitField(boolean [] bf){
+		byte[] bitfield= new byte[bf.length/8];
+		for (int i = 0; i<bf.length; i++){ //bf.length = bitfield*8
+			if(bf[i] == true){
+				bitfield[i/8] = (byte)1;
+			}else{
+				bitfield[i/8] = (byte)0;
+			}
+		}
+		return bitfield;
+	}
+	
 	/**
 	 * Saves the chunks downloaded to the output file specified by the user's argument.
 	 * */
-	private void saveToFile() throws IOException {
+	public void saveToFile() throws IOException {
 		System.out.println("Writing to File.");
 		try {
 			fileoutput = new FileOutputStream(new File(this.fileOutArg));

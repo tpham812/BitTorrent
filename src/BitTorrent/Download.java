@@ -36,7 +36,7 @@ public class Download implements Runnable {
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
 	
-	private Peer peer;
+	private static Peer peer;
 	
 	private FileChunks fc;	
 
@@ -56,7 +56,7 @@ public class Download implements Runnable {
 	}
 
 	/**
-	 * Download file from peer
+	 * Download file from peer by sending interested message after we have verified bitfield
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
@@ -78,29 +78,17 @@ public class Download implements Runnable {
 		Message askForPieces;
 		/**Message to peer telling it that we have received the piece*/
 		Message have;
-		int index = torrentInfo.piece_length; /**Length of piece*/
-
-		/**Start handshaking with peer*/
-		handShake(); 
+		int index = peer.torrentI.piece_length; /**Length of piece*/
+		
 		Message interested = new Message(1,(byte)2); /**create interested message*/
 
-		System.out.println("Reading message from peer.");
-		int read = readMessage();
-		System.out.println("Finished reading message from peer.");
-		byte[] bitField = new byte[in.available()];
-		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
-			in.readFully(bitField); /**get rid of bit field*/
-			
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			//implement rare piece stuff!!!
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		}
-
 		System.out.println("Writing message to peer.");
-		os.write(interested.message);
-		os.flush();/**push message to stream*/
+		peer.os.write(interested.message);
+		peer.os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
-
+		
+		int read;
+		
 		System.out.println("Reading message from peer.");
 		read = readMessage();
 		System.out.println("Finished reading message from peer.");
@@ -108,52 +96,52 @@ public class Download implements Runnable {
 			System.out.println("Unchoked. Downloading chunks.");
 		}else if (read==-2){
 			/**choked and timed out so destory connection*/
-			finishConnection(); //send stopped to tracker??!!
+			peer.closeConnection(); //send stopped to tracker??!!
 			return;
 			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		}
 
-		left = torrentInfo.piece_hashes.length-1;
-		lastSize = torrentInfo.file_length - (left*torrentInfo.piece_length);/**cuz last pieces might be irregurarly sized*/
-		this.chunksHashes= new ByteBuffer[torrentInfo.piece_hashes.length];
+		left = peer.torrentI.piece_hashes.length-1;
+		lastSize = peer.torrentI.file_length - (left*peer.torrentI.piece_length);/**cuz last pieces might be irregurarly sized*/
+		this.chunksHashes= new ByteBuffer[peer.torrentI.piece_hashes.length];
 
 		System.out.println("Started downloading chunks.");
 
 		ConnectToTracker.sendMessageToTracker(Event.sendStartedEvent(), "started");
-		while (block!=torrentInfo.piece_hashes.length){
+		while (block!=peer.torrentI.piece_hashes.length){
 			System.out.println("index, begin, block: "+index+","+begin+","+block);
-			if (block==torrentInfo.piece_hashes.length-1){ /**LAST PIECE*/
+			if (block==peer.torrentI.piece_hashes.length-1){ /**LAST PIECE*/
 				askForPieces = new Message(13,(byte)6); 
 				if (lastSize<index){
 					index = lastSize;
 				}else{
-					index = torrentInfo.piece_length;
+					index = peer.torrentI.piece_length;
 				}
 				lastSize = lastSize-index; 
 				askForPieces.setPayload(index,begin,block); /**ask for piece*/
-				os.write(askForPieces.message);
-				os.flush();
+				peer.os.write(askForPieces.message);
+				peer.os.flush();
 				
 				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				tempBuff = new byte[4];  /**remove unnecessary bytes*/
 				for (int k = 0; k<4;k++){
-					tempBuff[k]=in.readByte();
+					tempBuff[k]=peer.is.readByte();
 				}
 				chunk = new byte[index];
 				for (int l = 0; l<9;l++){
-					in.readByte();
+					peer.is.readByte();
 				}
 
 				for (int m = 0 ; m<index;m++){
-					chunk[m]=in.readByte(); 
+					chunk[m]=peer.is.readByte(); 
 				}/**read in chunk*/
-				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
+				byte[] trackerHash = peer.torrentI.piece_hashes[block].array();
 				MessageDigest digest = null;
 				try {
 					digest = MessageDigest.getInstance("SHA-1");
 				} catch (NoSuchAlgorithmException e) {
 					System.out.println("Error: Could not SHA-1");
-					finishConnection();
+					peer.closeConnection();
 					return;
 				}
 				digest.update(chunk);
@@ -180,15 +168,15 @@ public class Download implements Runnable {
 					block --;
 				}else{
 					/**add the chunk and write to the file if correct*/
-					this.bitfield[block]=true;
+					fc.ourBitField[block]=true;
 					this.chunksHashes[block] = ByteBuffer.wrap(chunkHash);
 					this.chunks.add(chunk); /**add to array*/
 					ConnectToTracker.updateAmounts(chunk.length);
 					ConnectToTracker.sendMessageToTracker(null, null);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
-					os.write(have.message);
-					os.flush();/**push message to stream*/
+					peer.os.write(have.message);
+					peer.os.flush();/**push message to stream*/
 				}
 				block++;
 
@@ -197,30 +185,30 @@ public class Download implements Runnable {
 				askForPieces = new Message(13,(byte)6); 
 				askForPieces.setPayload(index,begin,block);
 
-				os.write(askForPieces.message);
-				os.flush(); /**push to output stream.*/
+				peer.os.write(askForPieces.message);
+				peer.os.flush(); /**push to output stream.*/
 
 				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				tempBuff = new byte[4];  /**read in first four bytes which we don't use*/
 				for (int k = 0; k<4;k++){
-					tempBuff[k]=in.readByte();
+					tempBuff[k]=peer.is.readByte();
 				}
 
 				chunk = new byte[index]; /**create piece length size chunk*/
 				for (int l = 0; l<9;l++){
-					in.readByte();
+					peer.is.readByte();
 				}
 				for (int m = 0 ; m<index;m++){
-					chunk[m]=in.readByte(); 
+					chunk[m]=peer.is.readByte(); 
 				}/**read in chunk*/
 
-				byte[] trackerHash = torrentInfo.piece_hashes[block].array();
+				byte[] trackerHash = peer.torrentI.piece_hashes[block].array();
 				MessageDigest digest = null;
 				try {
 					digest = MessageDigest.getInstance("SHA-1");
 				} catch (Exception e) {
 					System.out.println("Error: Could not SHA-1");
-					finishConnection();
+					peer.closeConnection();
 					return;
 				}
 				digest.update(chunk);
@@ -247,16 +235,16 @@ public class Download implements Runnable {
 					/**do not change block because we need to request again.*/
 				}else{
 					/**add chunk to array and write to file and send have message*/
-					this.bitfield[block]=true;
+					fc.ourBitField[block]=true;
 					this.chunksHashes[block] = ByteBuffer.wrap(chunkHash);
 					this.chunks.add(chunk); /**add to array*/
 					ConnectToTracker.updateAmounts(chunk.length);
 					ConnectToTracker.sendMessageToTracker(null, null);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
-					os.write(have.message);
-					os.flush();/**push message to stream*/
-					if (begin+index==torrentInfo.piece_length){
+					peer.os.write(have.message);
+					peer.os.flush();/**push message to stream*/
+					if (begin+index==peer.torrentI.piece_length){
 						block++;
 						begin = 0;
 					}else{
@@ -266,9 +254,9 @@ public class Download implements Runnable {
 			}			
 		}
 		System.out.println("Finished downloading chunks.");
-		saveToFile();
+		fc.saveToFile();
 		ConnectToTracker.sendMessageToTracker(Event.sendCompletedEvent(), "completed");
-		finishConnection();
+		peer.closeConnection();
 		return;
 	}
 	/**
@@ -299,106 +287,25 @@ public class Download implements Runnable {
 		return true;
 	}
 
-
-	/**
-	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
-	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
-	 */
-	private void handShake(){
-
-		boolean peerInfoGood = true;
-		/**Construct message to send to peer*/
-		byte[] message = new byte[68];
-		message[0] = (byte)19;
-		System.arraycopy(BitProtocol, 0,message,1,19);
-		System.arraycopy(eightZeros, 0, message, 20, 8);
-		System.arraycopy(infoHash,0, message, 28, 20);
-		System.arraycopy(ourID, 0, message, 48, 20);
-
-		try {
-			System.out.println("Connecting to Peer.");
-
-			/**Open connection by using a socket*/
-			socket = new Socket(IP,port);
-			System.out.println("Connected.");
-			/**Create input and output stream*/
-			os = new DataOutputStream(socket.getOutputStream());
-			in = new DataInputStream(socket.getInputStream());
-		} catch (Exception e) {
-			System.out.println("Error: Could not Open Socket to Peer.");
-		} 
-
-		if (socket==null){ /**bad host name given.*/
-			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
-			finishConnection();
-			return;
-		}
-		System.out.println("Starting handshake.");
-		try {
-			/**Initiate handshake by sending message to peer*/
-			os.write(message); 
-			os.flush(); 
-
-			/**Get reply from peer*/
-			byte[] peerAns = new byte[68];
-			in.readFully(peerAns);
-
-			byte[] peerInfoHash = Arrays.copyOfRange(peerAns, 28, 48); 
-
-			/**checks if peer's info hash returned is same as info has we have from tracker*/
-			for (int i = 0; i<20;i++){
-				if (peerInfoHash[i]!=infoHash[i]){
-					System.out.println("Error: Peer's info hash returned from handshake is not same.");
-					finishConnection();
-					peerInfoGood = false;
-					break;
-				}		
-			}
-			/**If peer info given does not match as tracker's given, exit (already closed connections before)*/
-			if (peerInfoGood==false){
-				return;
-			}
-			/**Check if peer id is same as the tracker given peer id*/
-			byte[] peerIDCheck = Arrays.copyOfRange(peerAns, 48, 68);
-			for (int n = 0; n <20;n++){
-				if (ID[n]!=peerIDCheck[n]){
-					System.out.println("Error: Peer id is not same as given from tracker.");
-					finishConnection();
-					peerInfoGood = false;
-					break;
-				}
-			}
-			/**If peer info given does not match as tracker's given, exit (already closed connections before)*/
-			if (peerInfoGood==false){
-				return;
-			}
-		} catch (Exception e) {
-			System.out.println("Error: Could not handshake with peer.");
-			finishConnection();
-			return;
-		}
-		System.out.println("finished handshake.");
-	}
-	
 	/**
 	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
 	 * @throws SocketException
 	 */
 	private void gotChoked() throws SocketException{
-		this.choked = true;
-		socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
+		peer.isChoked = true;
+		peer.socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
 		do{
 			try {
 				if (readMessage()==1){
 					System.out.println("Got unchoked before time interval ended.");
-					this.choked=false;
+					peer.isChoked=false;
 					return;
 				}
 			} catch (IOException e) {
 				System.out.println("Timed out waiting to be unchoked! Finishing Connection.");
 				return;
 			}
-		}while (choked==true);
+		}while (peer.isChoked==true);
 	}
 	/**
 	 * Read in message from peer which are formatted based on message type.
@@ -409,9 +316,9 @@ public class Download implements Runnable {
 	private byte readMessage() throws IOException {
 
 		/**Read in message*/
-		int msgLength = in.readInt();
+		int msgLength = peer.is.readInt();
 		/**Read in id*/
-		byte id = in.readByte();
+		byte id = peer.is.readByte();
 
 		/**keep-alive*/
 		if(msgLength == 0){
@@ -419,17 +326,17 @@ public class Download implements Runnable {
 		}
 		switch(id){
 		case 0://choked
-			System.out.println("Choked on ip: "+this.IP+" on port: "+this.port);
+			System.out.println("Choked on ip: "+peer.ip+" on port: "+peer.port);
 			gotChoked(); 
-			if (this.choked==true){
+			if (peer.isChoked==true){
 				return -2;
 			}
 		case 1://unchoked
-			this.choked=false;
+			peer.isChoked=false;
 			return id;
 		case 7: //piece
-			int index = in.readInt();
-			int begin = in.readInt();	
+			int index = peer.is.readInt();
+			int begin = peer.is.readInt();	
 		default: return id;
 		}
 	}

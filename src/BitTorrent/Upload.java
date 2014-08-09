@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 
 public class Upload implements Runnable{
-	
+
 	/**Socket connection to the peer*/
 	private Socket socket;
 	/**Output stream to the peer*/
@@ -38,23 +38,23 @@ public class Upload implements Runnable{
 	private byte[] ourID;
 	/**Torrent Info file that comes from the .torrent file*/
 	private TorrentInfo torrentInfo;
-	
+
 	private Peer peer;
-	
+
 	private FileChunks fc;
-	
-	
+
+
 	public Upload(Peer peer, FileChunks fc) throws IOException, InterruptedException {
-		
+
 		this.peer = peer;
 		this.fc = fc;
 	}
-	
+
 	public void receiveHandshake(byte[] info_hash) throws IOException{
 		//read handshake from download peer
 		byte[] receiveHandshake =  new byte[68];
 		in.readFully(receiveHandshake);
-			
+
 		//send handshake back
 		byte[] returnShake = new byte[68];
 		returnShake[0] = (byte)19;
@@ -62,14 +62,14 @@ public class Upload implements Runnable{
 		System.arraycopy(peer.eightZeros, 0, returnShake, 20, 8);
 		System.arraycopy(info_hash,0, returnShake, 28, 20);
 		System.arraycopy(ourID, 0, returnShake, 48, 20);
-		
+
 		if(receiveHandshake[0] != (byte) 19){
 			System.out.println("Not a Bit Torrent Protocol.");
 		} else{
 			os.write(returnShake);
 			os.flush();
 		}
-		
+
 		//send bitfield message before unchoke
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		System.out.println("Sending bitfield message to peer.");
@@ -77,7 +77,7 @@ public class Upload implements Runnable{
 		os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
 
-		
+
 		//does not upload if not unchoked
 		boolean isUnchoked = unchoke();
 		if(isUnchoked){
@@ -87,7 +87,7 @@ public class Upload implements Runnable{
 			os.flush();/**push message to stream*/
 			System.out.println("Finished unchoke writing message to peer.");
 			upload();
-			
+
 		}else{
 			//choke msg 
 			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
@@ -95,15 +95,15 @@ public class Upload implements Runnable{
 			os.write(chokeMsg.message);
 			os.flush();/**push message to stream*/
 			System.out.println("Finished writing message to peer.");
- 		}
-		
-		
+		}
+
+
 	}
-	
-	
+
+
 	private byte readMessage() throws IOException {
 
-		
+
 		/**Read in message*/
 		int msgLength = in.readInt();
 		/**Read in id*/
@@ -119,29 +119,29 @@ public class Upload implements Runnable{
 			int begin = in.readInt();	
 		default: return id;
 		}
-		
-	
+
+
 	}
-	
+
 	//if user has bitfield or have messages and is interested, unchoke.
 	//This does not account for the optimistically unchoked. Implement 30sec thread!
-  	public boolean unchoke() throws IOException{
-  		
+	public boolean unchoke() throws IOException{
+
 		int msgIDfrPeer = readMessage();
-  		if (msgIDfrPeer == Message.MSG_INTERESTED){
-  			System.out.println("Peer is interested.");	
-  			int msgIDfrPeer2 = readMessage();  			
-  			//byte[] bitFieldOrHaveMsg = new byte[in.available()];
-  			//in.readFully(bitFieldOrHaveMsg); /**get rid of bit field*/  			
-  			if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
-  				System.out.println("Peer has something to share! Do not choke.");
-  				return true;	
-  			}
-  			return false;
-  		}
-  		return false;
-  	}
-	
+		if (msgIDfrPeer == Message.MSG_INTERESTED){
+			System.out.println("Peer is interested.");	
+			int msgIDfrPeer2 = readMessage();  			
+			//byte[] bitFieldOrHaveMsg = new byte[in.available()];
+			//in.readFully(bitFieldOrHaveMsg); /**get rid of bit field*/  			
+			if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
+				System.out.println("Peer has something to share! Do not choke.");
+				return true;	
+			}
+			return false;
+		}
+		return false;
+	}
+
 	/**
 	 * reads in request messages and sends the piece
 	 * reads in have messages and does nothing
@@ -151,41 +151,41 @@ public class Upload implements Runnable{
 		Message pieceMsg;
 		byte[] block;
 		int index, begin, length;
-		
+
 		int msg = readMessage();
 		if(msg == Message.MSG_HAVE || msg == Message.MSG_REQUEST){
-			
+
 			if(msg == Message.MSG_HAVE){
-			try {
-				// read the next request
-				msg = readMessage(); 
-			} catch (Exception e) {
-				// no following messages
-				return;
+				try {
+					// read the next request
+					msg = readMessage(); 
+				} catch (Exception e) {
+					// no following messages
+					return;
 				}
 			}
 		} else {
 			// other messages received
 		}
-		
+
 		index = in.readInt();
 		begin = in.readInt();
 		length = in.readInt();
-		
-		
-	
+
+
+
 	}
-	
-	
+
+
 	public void isStopped() throws IOException{
 		//threads? msg from tracker?
 		//put condition here
 		//finishConnection();
 	}
-	
+
 
 	public void run() {
-		
+
 		System.out.println("Uploading to some peer on new thread.");
 		try {
 			upload();
@@ -193,8 +193,8 @@ public class Upload implements Runnable{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 
 }
