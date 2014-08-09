@@ -35,10 +35,8 @@ public class Peer {
 	public Peer(String ip, byte[] id, int port) throws IOException {
 		this.port = port;
 		this.ip = ip;
+		this.id = id;
 		this.torrentI = ConnectToTracker.torrentI;
-	
-		
-		
 	}
 	
 	/**
