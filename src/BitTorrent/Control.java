@@ -4,6 +4,25 @@ import java.io.IOException;
 
 public class Control {
 
+	/**
+	 * Connect to tracker and get a list of peers. Find the right peer and connects to it to begin download
+	 * @param torrent_File Torrent file
+	 * @param fileName File name to store 
+	 */
+	public static void startPeers() {
+		try {
+			/**Connect to peer*/
+			//Download peer = new Download(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
+			/**Download file from peer*/
+			//peer.downloadFileFromPeer();
+		} catch (Exception e) {
+			System.out.println("Error: Cannot create Peer.");
+		}
+		
+	}
+	
+	
+	
 	//Keep track of uploaded peers, call ConnectionCount
 	//If Upload is already 6, then we cannot unchoke anyone
 	//If less than 3 download peers and peer is interested, let connect
