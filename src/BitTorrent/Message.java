@@ -91,20 +91,20 @@ public class Message {
 	 * If it is not one of those messages, it outputs an error.  
 	 * Payloads are specific bytes that are added onto have, piece and request messages that describe the data.
 	 */
-	public void setPayload(int requestIndex, int currentDL, int numChunks) {
+	public void setPayload(int index, int begin, int length) {
 		/**Turn the required info into a byte array (big endian) and add it to the message. */
 		if (id == MSG_HAVE) {
-			System.arraycopy(Helper.intToByteArray(numChunks), 0,message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(length), 0,message, 5, 4);
 			
 		} else if (id == MSG_PIECE) {
 			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
-			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4); 
+			System.arraycopy(Helper.intToByteArray(begin), 0,message, 9, 4); 
 			System.arraycopy(null, 0, message, 13, lengthPrefix-9);
 			
 		} else if (id == MSG_REQUEST) {
-			System.arraycopy(Helper.intToByteArray(numChunks),0,message, 5, 4);
-			System.arraycopy(Helper.intToByteArray(currentDL), 0,message, 9, 4);
-			System.arraycopy(Helper.intToByteArray(requestIndex), 0,message, 13, 4);
+			System.arraycopy(Helper.intToByteArray(length),0,message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(begin), 0,message, 9, 4);
+			System.arraycopy(Helper.intToByteArray(index), 0,message, 13, 4);
 			
 		} else {
 			System.out.println("Error: Payload requested for wrong message id type. Payload can only be done for have, pieces and request ids only.");

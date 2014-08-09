@@ -151,31 +151,43 @@ public class Upload implements Runnable{
 		Message pieceMsg;
 		byte[] block;
 		int index, begin, length;
-
+		
 		int msg = readMessage();
 		if(msg == Message.MSG_HAVE || msg == Message.MSG_REQUEST){
-
+			
 			if(msg == Message.MSG_HAVE){
-				try {
-					// read the next request
-					msg = readMessage(); 
-				} catch (Exception e) {
-					// no following messages
-					return;
+			try {
+				// read the next request
+				msg = readMessage(); 
+			} catch (Exception e) {
+				// no following messages
+				return;
 				}
+			} else {
+			// other messages received
+			}
+		
+			index = in.readInt();
+			begin = in.readInt();
+			length = in.readInt();
+		
+			if(FileChunks.ourBitField[index] == true){
+				block = new byte[length];
+				System.arraycopy(FileChunks.booleanToByteBitField[index].array(), begin, block, //this is a bytebuffer[] of pieces
+						0, length);
+				pieceMsg = new Message(9 + length, (byte) 7);
+				pieceMsg.setPayload(index, begin, length);
+				os.write(pieceMsg.message);
+				os.flush();
+				//FileChunks.uploaded += length; //we can add this later if we want to count uploaded amount
+			} else {
+				System.out.println("no I don't have this piece " + index);
 			}
 		} else {
-			// other messages received
+			//other messages received that is neither have nor request
 		}
-
-		index = in.readInt();
-		begin = in.readInt();
-		length = in.readInt();
-
-
-
+	
 	}
-
 
 	public void isStopped() throws IOException{
 		//threads? msg from tracker?
