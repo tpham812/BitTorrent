@@ -27,15 +27,28 @@ public class FileChunks {
 	 * COnverts the boolean bit field to a byte array for upload peer.
 	 * */
 	public byte[] booleanToByteBitField(boolean [] bf){
-		byte[] bitfield= new byte[bf.length/8];
+		byte[] ba= new byte[bf.length/8];
+		
+		for (int i = 0; i<ba.length; i++){
+			ba[i]=0;
+		}
+		int count = 0;
+		int sum=0;
 		for (int i = 0; i<bf.length; i++){ //bf.length = bitfield*8
+			//byte[] bits = new byte[]({byte) (bf[i]?1:0));
+			count++;
 			if(bf[i] == true){
-				bitfield[i/8] = (byte)1;
-			}else{
-				bitfield[i/8] = (byte)0;
+				sum= sum + (int)Math.pow(2,7-(i%8));
+				if(count == 8) {
+					ba[i/8] = (byte)sum;
+					System.out.println("Sum: "+ sum);
+					sum = 0;
+					count = 1;
+
+				}
 			}
 		}
-		return bitfield;
+		return ba;
 	}
 	
 	/**
