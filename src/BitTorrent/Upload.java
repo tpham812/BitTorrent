@@ -101,36 +101,15 @@ public class Upload implements Runnable{
 	}
 
 
-	private byte readMessage() throws IOException {
-
-
-		/**Read in message*/
-		int msgLength = in.readInt();
-		/**Read in id*/
-		byte id = in.readByte();
-
-		/**keep-alive*/
-		if(msgLength == 0){
-			return -1;
-		}
-		switch(id){
-		case 7: 
-			int index = in.readInt();
-			int begin = in.readInt();	
-		default: return id;
-		}
-
-
-	}
 
 	//if user has bitfield or have messages and is interested, unchoke.
 	//This does not account for the optimistically unchoked. Implement 30sec thread!
 	public boolean unchoke() throws IOException{
 
-		int msgIDfrPeer = readMessage();
+		int msgIDfrPeer = Peer.readMessage();
 		if (msgIDfrPeer == Message.MSG_INTERESTED){
 			System.out.println("Peer is interested.");	
-			int msgIDfrPeer2 = readMessage();  			
+			int msgIDfrPeer2 = Peer.readMessage();  			
 			//byte[] bitFieldOrHaveMsg = new byte[in.available()];
 			//in.readFully(bitFieldOrHaveMsg); /**get rid of bit field*/  			
 			if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
@@ -152,13 +131,13 @@ public class Upload implements Runnable{
 		byte[] block;
 		int index, begin, length;
 		
-		int msg = readMessage();
+		int msg = Peer.readMessage();
 		if(msg == Message.MSG_HAVE || msg == Message.MSG_REQUEST){
 			
 			if(msg == Message.MSG_HAVE){
 			try {
 				// read the next request
-				msg = readMessage(); 
+				msg = Peer.readMessage(); 
 			} catch (Exception e) {
 				// no following messages
 				return;

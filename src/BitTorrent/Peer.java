@@ -15,10 +15,10 @@ public class Peer {
 	//what else can it do?
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
-	boolean isChoked;
-	public int port;
+	static boolean isChoked;
+	public static int port;
 	public byte[] id;
-	public String ip;
+	public static String ip;
 	public static DataOutputStream os;
 	public static DataInputStream is;
 	public static byte[] ourID;
@@ -141,7 +141,7 @@ public class Peer {
 	 * @return message byte as int is returned 
 	 * @throws IOException
 	 */
-	byte readMessage() throws IOException {
+	static byte readMessage() throws IOException {
 
 		/**Read in message*/
 		int msgLength = is.readInt();
