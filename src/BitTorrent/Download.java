@@ -25,7 +25,7 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
  *
  */
 
-public class DPeer implements Runnable {
+public class Download implements Runnable {
 	
 	/**Final file that is output*/
 	private FileOutputStream fileoutput;
@@ -49,7 +49,7 @@ public class DPeer implements Runnable {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public DPeer(Peer peer, FileChunks fc) throws IOException, InterruptedException{
+	public Download(Peer peer, FileChunks fc) throws IOException, InterruptedException{
 
 		this.peer = peer;
 		this.fc = fc;

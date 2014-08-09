@@ -20,7 +20,7 @@ import java.util.ArrayList;
 //!!!!!!!!!AND how do we keep tracked of choked/unchoked peers? !!!!
 
 
-public class UPeer implements Runnable{
+public class Upload implements Runnable{
 	
 	/**Socket connection to the peer*/
 	private Socket socket;
@@ -44,7 +44,7 @@ public class UPeer implements Runnable{
 	private FileChunks fc;
 	
 	
-	public UPeer(Peer peer, FileChunks fc) throws IOException, InterruptedException {
+	public Upload(Peer peer, FileChunks fc) throws IOException, InterruptedException {
 		
 		this.peer = peer;
 		this.fc = fc;
