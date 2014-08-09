@@ -16,7 +16,6 @@ public class Peer {
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 	static boolean isChoked;
-	public double throughput;
 	public static int port;
 	public byte[] id;
 	public static String ip;
@@ -33,17 +32,20 @@ public class Peer {
 	protected final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 
-	public Peer(String ip, byte[] id, int port) {
+	public Peer(String ip, byte[] id, int port) throws IOException {
 		this.port = port;
 		this.ip = ip;
 		this.torrentI = ConnectToTracker.torrentI;
+	
+		
+		
 	}
 	
 	/**
 	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
 	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
 	 */
-	public void openConnection(Socket socket){
+	public boolean openConnection(){
 
 		boolean peerInfoGood = true;
 		/**Construct message to send to peer*/
@@ -70,7 +72,7 @@ public class Peer {
 		if (socket==null){ /**bad host name given.*/
 			System.out.println("Error: Peer Socket was unable to be created due to bad hostname/IP address or bad port number given. Please try again.");
 			closeConnection();
-			return;
+			return false;
 		}
 		System.out.println("Starting handshake.");
 		try {
@@ -95,7 +97,7 @@ public class Peer {
 			}
 			/**If peer info given does not match as tracker's given, exit (already closed connections before)*/
 			if (peerInfoGood==false){
-				return;
+				return false;
 			}
 			/**Check if peer id is same as the tracker given peer id*/
 			byte[] peerIDCheck = Arrays.copyOfRange(peerAns, 48, 68);
@@ -109,14 +111,15 @@ public class Peer {
 			}
 			/**If peer info given does not match as tracker's given, exit (already closed connections before)*/
 			if (peerInfoGood==false){
-				return;
+				return false;
 			}
 		} catch (Exception e) {
 			System.out.println("Error: Could not handshake with peer.");
 			closeConnection();
-			return;
+			return false;
 		}
 		System.out.println("finished handshake.");
+		return true;
 	}
 	
 	/** Get bitfield from peer */

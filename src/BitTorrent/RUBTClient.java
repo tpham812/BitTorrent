@@ -1,6 +1,7 @@
 package BitTorrent;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
@@ -66,8 +67,9 @@ public class RUBTClient {
 	 * Connect to tracker and get a list of peers. Find the right peer and connects to it to begin download
 	 * @param torrent_File Torrent file
 	 * @param fileName File name to store 
+	 * @throws IOException 
 	 */
-	public static int startDownload(File torrent_File, String fileName) {
+	public static int startDownload(File torrent_File, String fileName) throws IOException {
 		HashMap peer_Map = null, response = null;
 		ArrayList list = null;
 		String peerID ="", peerIP = "";
@@ -86,9 +88,14 @@ public class RUBTClient {
 				peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
 				peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
 				peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);	
-				if(peerID.contains("RU1103")) {
+				if((peerIP.equalsIgnoreCase("128.6.5.131")) || (peerIP.equalsIgnoreCase("128.6.5.130")) ) {
 					found = true;
-					break;
+					Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
+					if(temp.openConnection()){
+						temp.getBitField();
+
+					}
+
 				}
 			}
 

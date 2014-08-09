@@ -1,15 +1,15 @@
 package BitTorrent;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Control {
 
 	/**
 	 * Connect to tracker and get a list of peers. Find the right peer and connects to it to begin download
-	 * @param torrent_File Torrent file
-	 * @param fileName File name to store 
+	 * @param list the list of peers.
 	 */
-	public static void startPeers() {
+	public static void startPeers(ArrayList list) {
 		try {
 			/**Connect to peer*/
 			//Download peer = new Download(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
@@ -18,11 +18,11 @@ public class Control {
 		} catch (Exception e) {
 			System.out.println("Error: Cannot create Peer.");
 		}
-		
+
 	}
-	
-	
-	
+
+
+
 	//Keep track of uploaded peers, call ConnectionCount
 	//If Upload is already 6, then we cannot unchoke anyone
 	//If less than 3 download peers and peer is interested, let connect
@@ -36,11 +36,11 @@ public class Control {
 			//If we have less than 3 downloading peers, let this peer connect.			
 			if(PeerConnectionsInfo.uploadConnections < 3){
 				return true;
-			//If we are already connected to six people who are uploading from us, keep peer choked.
+				//If we are already connected to six people who are uploading from us, keep peer choked.
 			} else if (PeerConnectionsInfo.uploadConnections > 6){
 				//if timer is awake, then evaluate worst peer and unchoke random peer
 				return false; 
-			//read message to see if they are have messages.
+				//read message to see if they are have messages.
 			} else {	
 				int msgIDfrPeer2 = Peer.readMessage();  		
 				//byte[] bitFieldOrHaveMsg = new byte[in.available()];
@@ -54,7 +54,7 @@ public class Control {
 		} else{
 			//Peer.closeConnection(); because peer is not interested
 			return false;
-			
+
 		}
 	}
 }
