@@ -102,8 +102,7 @@ public class ConnectToTracker {
 	}
 
 	/**
-	 * Sends formatted URL message to tracker, connects to tracker and returns the decoded answer of tracker
-	 * @return Decoded message of Tracker as hashmap
+	 * Opoens up a connections and sends formatted URL message to tracker
 	 * @throws UnsupportedEncodingException
 	 * @throws BencodingException
 	 * @throws NoSuchAlgorithmException
@@ -202,7 +201,7 @@ public class ConnectToTracker {
 
 	/**
 	 * Update downloaded and left
-	 * @param amount Amount just downloaded
+	 * @param amount Amount of bytes recently downloaded
 	 */
 	public static void updateAmounts(int amount) {
 
