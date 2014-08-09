@@ -29,9 +29,7 @@ public class RUBTClient {
 	 */
 	public static void main(String[] args) throws NoSuchAlgorithmException, BencodingException, UnsupportedEncodingException, MalformedURLException {
 
-		Task task = new Task();
-		Thread thread = new Thread(task);
-		thread.start();
+		
 		/**Check if user entered in 2 arguments*/
 		//if (args.length!=2){
 	//		System.out.println("Error: Need 2 arguments; the name of the torrent file and the name of the file to save the data to.");
