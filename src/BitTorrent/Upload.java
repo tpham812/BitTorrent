@@ -106,6 +106,11 @@ public class Upload implements Runnable{
 	//This does not account for the optimistically unchoked. Implement 30sec thread!
 	public boolean unchoke() throws IOException{
 
+		//Keep track of uploaded peers, call ConnectionCount
+		//If Upload is already 6, then we cannot unchoke anyone
+		//UNLESS 30 seconds has already passed. 
+		
+		
 		int msgIDfrPeer = Peer.readMessage();
 		if (msgIDfrPeer == Message.MSG_INTERESTED){
 			System.out.println("Peer is interested.");	
