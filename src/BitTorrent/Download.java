@@ -90,7 +90,7 @@ public class Download implements Runnable {
 		int read;
 		
 		System.out.println("Reading message from peer.");
-		read = readMessage();
+		read = peer.readMessage();
 		System.out.println("Finished reading message from peer.");
 		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
@@ -291,12 +291,12 @@ public class Download implements Runnable {
 	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
 	 * @throws SocketException
 	 */
-	private void gotChoked() throws SocketException{
+	static void gotChoked() throws SocketException{
 		peer.isChoked = true;
 		peer.socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
 		do{
 			try {
-				if (readMessage()==1){
+				if (peer.readMessage()==1){
 					System.out.println("Got unchoked before time interval ended.");
 					peer.isChoked=false;
 					return;
@@ -307,39 +307,7 @@ public class Download implements Runnable {
 			}
 		}while (peer.isChoked==true);
 	}
-	/**
-	 * Read in message from peer which are formatted based on message type.
-	 * We need id of the message to identify what type of message was sent. 
-	 * @return message byte as int is returned 
-	 * @throws IOException
-	 */
-	private byte readMessage() throws IOException {
-
-		/**Read in message*/
-		int msgLength = peer.is.readInt();
-		/**Read in id*/
-		byte id = peer.is.readByte();
-
-		/**keep-alive*/
-		if(msgLength == 0){
-			return -1;
-		}
-		switch(id){
-		case 0://choked
-			System.out.println("Choked on ip: "+peer.ip+" on port: "+peer.port);
-			gotChoked(); 
-			if (peer.isChoked==true){
-				return -2;
-			}
-		case 1://unchoked
-			peer.isChoked=false;
-			return id;
-		case 7: //piece
-			int index = peer.is.readInt();
-			int begin = peer.is.readInt();	
-		default: return id;
-		}
-	}
+	
 
 
 	@Override

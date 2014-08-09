@@ -2,6 +2,7 @@ package BitTorrent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,12 +119,13 @@ public class Peer {
 	}
 	
 	/** Get bitfield from peer */
-	/** If wrong bit field size make bitfield null */
-	public void getBitField() {
+	/** If wrong bit field size make bitfield null 
+	 * @throws IOException */
+	public void getBitField() throws IOException {
 		System.out.println("Reading message from peer.");
 		int read = readMessage();
 		System.out.println("Finished reading message from peer.");
-		byte[] bitField = new byte[Peer.is.available()];
+		byte[] bitField = new byte[is.available()];
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
 			is.readFully(bitField); /**get rid of bit field*/
 			
@@ -133,7 +135,39 @@ public class Peer {
 		}
 
 	}
-	
+	/**
+	 * Read in message from peer which are formatted based on message type.
+	 * We need id of the message to identify what type of message was sent. 
+	 * @return message byte as int is returned 
+	 * @throws IOException
+	 */
+	byte readMessage() throws IOException {
+
+		/**Read in message*/
+		int msgLength = is.readInt();
+		/**Read in id*/
+		byte id = is.readByte();
+
+		/**keep-alive*/
+		if(msgLength == 0){
+			return -1;
+		}
+		switch(id){
+		case 0://choked
+			System.out.println("Choked on ip: "+ip+" on port: "+port);
+			Download.gotChoked(); 
+			if (isChoked==true){
+				return -2;
+			}
+		case 1://unchoked
+			isChoked=false;
+			return id;
+		case 7: //piece
+			int index = is.readInt();
+			int begin = is.readInt();	
+		default: return id;
+		}
+	}
 	
 	/** 
 	 * Converts bitfield byte array to boolean array 
