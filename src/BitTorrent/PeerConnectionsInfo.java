@@ -16,7 +16,5 @@ public class PeerConnectionsInfo {
 	public static HashMap<byte[],Peer> peers = new HashMap<byte[], Peer>();
 	
 	
-	public static keepAlive() {
-		
-	}
+	
 }
