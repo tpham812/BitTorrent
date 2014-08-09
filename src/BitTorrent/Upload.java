@@ -136,8 +136,13 @@ public class Upload implements Runnable{
 						0, length);
 				pieceMsg = new Message(9 + length, (byte) 7);
 				pieceMsg.setPayload(index, begin, length);
+				long startTime = System.nanoTime();
 				os.write(pieceMsg.message);
 				os.flush();
+				
+				long endTime = System.nanoTime();
+				
+				peer.throughput = (double)ConnectToTracker.torrentI.piece_length / ((endTime - startTime)/1000000000.0);
 				//FileChunks.uploaded += length; //we can add this later if we want to count uploaded amount
 			} else {
 				System.out.println("no I don't have this piece " + index);

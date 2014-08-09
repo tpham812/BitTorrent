@@ -16,6 +16,7 @@ public class Peer {
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 	static boolean isChoked;
+	public double throughput;
 	public static int port;
 	public byte[] id;
 	public static String ip;

@@ -53,6 +53,8 @@ public class Download implements Runnable {
 
 		this.peer = peer;
 		this.fc = fc;
+		
+				
 	}
 
 	/**
