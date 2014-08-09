@@ -132,8 +132,7 @@ public class Upload implements Runnable{
 		
 			if(FileChunks.ourBitField[index] == true){
 				block = new byte[length];
-				System.arraycopy(FileChunks.booleanToByteBitField[index].array(), begin, block, //this is a bytebuffer[] of pieces
-						0, length);
+				System.arraycopy((FileChunks.booleanToByteBitField(fc.ourBitField))[index], begin, block, 0, length);
 				pieceMsg = new Message(9 + length, (byte) 7);
 				pieceMsg.setPayload(index, begin, length);
 				long startTime = System.nanoTime();
