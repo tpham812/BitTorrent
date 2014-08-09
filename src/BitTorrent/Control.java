@@ -34,10 +34,10 @@ public class Control {
 		if (msgIDfrPeer == Message.MSG_INTERESTED){
 			System.out.println("Peer is interested.");
 			//If we have less than 3 downloading peers, let this peer connect.			
-			if(ConnectionCount.uploadConnections < 3){
+			if(PeerConnectionsInfo.uploadConnections < 3){
 				return true;
 			//If we are already connected to six people who are uploading from us, keep peer choked.
-			} else if (ConnectionCount.uploadConnections > 6){
+			} else if (PeerConnectionsInfo.uploadConnections > 6){
 				//if timer is awake, then evaluate worst peer and unchoke random peer
 				return false; 
 			//read message to see if they are have messages.
