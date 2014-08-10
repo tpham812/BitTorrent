@@ -37,7 +37,6 @@ public class Download implements Runnable {
 	private ByteBuffer[] chunksHashes; 
 	
 	private static Peer peer;
-	private PeerConnectionsInfo pci;
 	private FileChunks fc;	
 
 	/**
@@ -49,11 +48,10 @@ public class Download implements Runnable {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public Download(Peer peer, FileChunks fc, PeerConnectionsInfo pci) throws IOException, InterruptedException{
+	public Download(Peer peer, FileChunks fc) throws IOException, InterruptedException{
 
 		this.peer = peer;
 		this.fc = fc;
-		this.pci = pci;
 		
 				
 	}
@@ -275,13 +273,12 @@ public class Download implements Runnable {
 	/**sends have message to all peers when we have a chunk stored!*/
 	private void writeHavetoAllPeers(Message have) {
 		
-		for (int i = 0; i<pci.subsetDPeers.size();i++){
+		for (int i = 0; i<PeerConnectionsInfo.subsetDPeers.size();i++){
 			try {
 				PeerConnectionsInfo.subsetDPeers.get(i).os.write(have.message);
 				PeerConnectionsInfo.subsetDPeers.get(i).os.flush();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Error: Cannot send have message to peer");
 			}
 		}
 	}

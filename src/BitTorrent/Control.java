@@ -7,13 +7,10 @@ import java.util.Random;
 
 public class Control {
 	boolean gotEntireBitField = false;
-	PeerConnectionsInfo pci;
 	/**
 	 * Finds the perfect subset of peers to get the entire file with the rarest first prefered.
-	 * @param pci the peer connections info which has all the peers.
 	 */
-	public boolean startPeers(PeerConnectionsInfo pci) {
-		this.pci = pci;
+	public boolean startPeers() {
 		findList();
 		return gotEntireBitField;
 	}
@@ -21,16 +18,16 @@ public class Control {
 
 	/**makes a list of subset of peers with bitfields adding up to the entire file with rarest peers first*/
 	private void findList() {
-		List<Peer> subset= pci.subsetDPeers;
+		List<Peer> subset= PeerConnectionsInfo.subsetDPeers;
 		int numChunks = ConnectToTracker.torrentI.piece_hashes.length;
 		bitFieldDS[] bfDS = new bitFieldDS[numChunks];
 
 		/**for each chunk add up the number of peers that have that bit field to true*/
 		for (int j = 0; j<numChunks; j++){ 
-			for (int i = 0; i<pci.downloadPeers.size();i++){
-				if(pci.downloadPeers.get(i).boolBitField[j]==true){
+			for (int i = 0; i<PeerConnectionsInfo.downloadPeers.size();i++){
+				if(PeerConnectionsInfo.downloadPeers.get(i).boolBitField[j]==true){
 					bfDS[j].sum++;
-					bfDS[j].lp.add(pci.downloadPeers.get(i));
+					bfDS[j].lp.add(PeerConnectionsInfo.downloadPeers.get(i));
 				}
 			}
 		}
@@ -60,7 +57,9 @@ public class Control {
 					bfDS[i].sum = Integer.MAX_VALUE;
 				}
 			}
-			subset.add(bfDS[index].lp.get(0)); //get first peer that has that index
+			if (!inSubset(subset, bfDS[index])){
+				subset.add(bfDS[index].lp.get(0)); //get first peer that has that index
+			}
 		}
 
 		if (fullBitField(bf)==true){
@@ -68,6 +67,16 @@ public class Control {
 		}
 
 	}
+
+	private boolean inSubset(List<Peer> subset, bitFieldDS bfDS) {
+		for (int i = 0 ; i< bfDS.lp.size(); i++){
+			if (subset.contains(bfDS.lp.get(i))){
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	/**sees if bitfield is not full or not. if bitfield is not full then we need more chunks*/
 	private boolean fullBitField(boolean[] bf){ 
@@ -167,9 +176,9 @@ public class Control {
 
 	public void makeThreads(FileChunks fc) {
 		Download temp;
-		for(int i = 0; i< pci.subsetDPeers.size(); i++){
+		for(int i = 0; i< PeerConnectionsInfo.subsetDPeers.size(); i++){
 			try {
-				temp = new Download(pci.subsetDPeers.get(i), fc, pci);
+				temp = new Download(PeerConnectionsInfo.subsetDPeers.get(i), fc);
 				temp.run();
 			} catch (Exception e) {
 				System.out.println("Error: Could not create Thread to run!");

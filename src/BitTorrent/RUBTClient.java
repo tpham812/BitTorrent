@@ -90,10 +90,8 @@ public class RUBTClient {
 				trackInterval=180;
 			}
 		}
-		/**Request new tracker response if peer RU1103 is not found*/
-		PeerConnectionsInfo pci = new PeerConnectionsInfo();
+		/**Request new tracker response if peers not found*/
 		do {
-			/**Look for peer RU1103 from list*/
 			for(int i = 0; i < list.size(); i++){
 				peer_Map = (HashMap)list.get(i);
 				peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
@@ -104,8 +102,8 @@ public class RUBTClient {
 					Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 					if(temp.openConnection()){
 						temp.getBitField();
-						pci.peers.put(temp.boolBitField, temp);
-						pci.downloadPeers.add(temp);
+						PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
+						PeerConnectionsInfo.downloadPeers.add(temp);
 					}
 				}
 			}
@@ -135,7 +133,7 @@ public class RUBTClient {
 		tit.run();
 		
 		Control ctrl = new Control();
-		boolean done = ctrl.startPeers(pci);
+		boolean done = ctrl.startPeers();
 		FileChunks fc = new FileChunks(fileName);
 		ctrl.makeThreads(fc);
 		if(!done){
@@ -153,7 +151,7 @@ public class RUBTClient {
 		} catch (Exception e) {
 			System.out.println("Couldn't send stop event message.");
 		}
-		closeAllConnections(pci);
+		closeAllConnections();
 
 
 		return 0;
@@ -161,9 +159,9 @@ public class RUBTClient {
 	}
 
 	/**closes connections to all the peers in pci*/
-	private static void closeAllConnections(PeerConnectionsInfo pci) {
-		for (int j = 0; j< pci.downloadPeers.size();j++){
-			pci.downloadPeers.get(j).closeConnection();
+	private static void closeAllConnections() {
+		for (int j = 0; j< PeerConnectionsInfo.downloadPeers.size();j++){
+			PeerConnectionsInfo.downloadPeers.get(j).closeConnection();
 		}
 	}
 }

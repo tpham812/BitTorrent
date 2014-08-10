@@ -135,6 +135,8 @@ public class Peer {
 				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
 			}
 		}
+		
+		this.boolBitField = toBooleanArray(bitField);
 
 	}
 	/**
