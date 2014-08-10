@@ -2,6 +2,7 @@ package BitTorrent;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Control {
 
@@ -27,34 +28,65 @@ public class Control {
 	//If Upload is already 6, then we cannot unchoke anyone
 	//If less than 3 download peers and peer is interested, let connect
 	//If 30 second timer wakes, choke worst peer and unchoke randomly. 
-	public static boolean unchoke() throws IOException{
+	public static void unchoke(Peer peer) throws IOException{
+		
 
 		//read message from peer to see if they are interested.
-		int msgIDfrPeer = Peer.readMessage();
-		if (msgIDfrPeer == Message.MSG_INTERESTED){
+		int msgfrPeer = Peer.readMessage();
+		if (msgfrPeer == Message.MSG_INTERESTED){
 			System.out.println("Peer is interested.");
 			//If we have less than 3 downloading peers, let this peer connect.			
-			if(PeerConnectionsInfo.uploadConnections < 3){
-				return true;
+			if(PeerConnectionsInfo.unchokedPeers.size() < 3){
+				PeerConnectionsInfo.unchokedPeers.add(peer);
+				System.out.println("Peer is unchoked.");
 				//If we are already connected to six people who are uploading from us, keep peer choked.
 			} else if (PeerConnectionsInfo.uploadConnections > 6){
-				//if timer is awake, then evaluate worst peer and unchoke random peer
-				return false; 
+				PeerConnectionsInfo.chokedPeers.add(peer);
+				System.out.println("Peer is choked.");
+				randomUnchoke();
 				//read message to see if they are have messages.
 			} else {	
 				int msgIDfrPeer2 = Peer.readMessage();  		
-				//byte[] bitFieldOrHaveMsg = new byte[in.available()];
-				//in.readFully(bitFieldOrHaveMsg); /**get rid of bit field*/  			
-				if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
-					System.out.println("Peer has something to share! Do not choke.");
-					return true;
-				}	
-				return false;
+					if(msgIDfrPeer2 == Message.MSG_HAVE || msgIDfrPeer2 == Message.MSG_BITFIELD){
+						PeerConnectionsInfo.unchokedPeers.add(peer);
+						System.out.println("Peer has something to share! Peer is unchoked.");					
+					}	
 			}
 		} else{
-			//Peer.closeConnection(); because peer is not interested
-			return false;
+			//Peer.closeConnection(); 
+			//!!!!!!!make closeConnnection static without socket error
+			//peer is uninterested, 
+			
+
 
 		}
+	}
+	
+	public static void randomUnchoke(){
+		
+		Peer optimisticUnchoke;
+		Peer chokedPeer = null;
+		double currTP = 0;
+		double leastTP = 0;
+		
+		//IF timer is up, PLACE THIS HERE!!!!!
+		for (int i = 0; i < PeerConnectionsInfo.unchokedPeers.size(); i++){
+			//compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer);
+			currTP = PeerConnectionsInfo.unchokedPeers.get(i).throughput;
+			if(currTP < leastTP){
+				leastTP = currTP;
+				chokedPeer = PeerConnectionsInfo.unchokedPeers.get(i);
+			}
+		}
+		
+		PeerConnectionsInfo.unchokedPeers.remove(chokedPeer);
+		PeerConnectionsInfo.chokedPeers.add(chokedPeer);
+		
+		
+		//randomly select a peer from PeerConnectionInfo.chokedPeers
+		Random r = new Random();
+		optimisticUnchoke = PeerConnectionsInfo.chokedPeers.get(r.nextInt(PeerConnectionsInfo.chokedPeers.size()));
+		PeerConnectionsInfo.unchokedPeers.add(optimisticUnchoke);
+		PeerConnectionsInfo.chokedPeers.remove(optimisticUnchoke);
 	}
 }

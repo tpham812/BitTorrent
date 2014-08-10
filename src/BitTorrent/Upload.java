@@ -79,8 +79,7 @@ public class Upload implements Runnable{
 
 
 		//does not upload if not unchoked
-		boolean isUnchoked = Control.unchoke();
-		if(isUnchoked){
+		if(PeerConnectionsInfo.unchokedPeers.contains(peer)){
 			Message unchokeMsg = new Message(1,(byte)1); /**create unchoke message*/
 			System.out.println("Writing unchoke message to peer.");
 			os.write(unchokeMsg.message);
@@ -110,46 +109,59 @@ public class Upload implements Runnable{
 		Message pieceMsg;
 		byte[] block;
 		int index, begin, length;
+		long startTime;
+		long endTime;
+		int fileLength = ConnectToTracker.torrentI.piece_hashes.length;
+		int pieceLength = ConnectToTracker.torrentI.piece_length;
+		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); //Is this correct?! 
+		int lastPieceIndex = fileLength - 1;
 		
-		int msg = Peer.readMessage();
-		if(msg == Message.MSG_HAVE || msg == Message.MSG_REQUEST){
-			
-			if(msg == Message.MSG_HAVE){
-			try {
-				// read the next request
-				msg = Peer.readMessage(); 
-			} catch (Exception e) {
-				// no following messages
-				return;
+		while(true){
+			int msg = Peer.readMessage();
+			if(msg == Message.MSG_REQUEST){
+
+				index = in.readInt();
+				begin = in.readInt();
+				length = in.readInt();
+
+				if(FileChunks.ourBitField[index] == true){
+					block = new byte[length];
+					System.arraycopy((FileChunks.booleanToByteBitField(fc.ourBitField))[index], begin, block, 0, length);
+					pieceMsg = new Message(9 + length, (byte) 7);
+					pieceMsg.setPayload(index, begin, length);
+					startTime = System.nanoTime();
+					os.write(pieceMsg.message);
+					os.flush();
+
+					if(msg == Message.MSG_HAVE){
+						endTime = System.nanoTime();					
+						if(index == lastPieceIndex){
+					peer.throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
+						else {
+					peer.throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
+						}
+					}else{
+					System.out.println("No Have message received.");
+					//need to end timer					
+					}
+
+				}else {
+					System.out.println("I don't have this piece " + index);
 				}
-			} else {
-			// other messages received
-			}
-		
-			index = in.readInt();
-			begin = in.readInt();
-			length = in.readInt();
-		
-			if(FileChunks.ourBitField[index] == true){
-				block = new byte[length];
-				System.arraycopy((FileChunks.booleanToByteBitField(fc.ourBitField))[index], begin, block, 0, length);
-				pieceMsg = new Message(9 + length, (byte) 7);
-				pieceMsg.setPayload(index, begin, length);
-				long startTime = System.nanoTime();
-				os.write(pieceMsg.message);
-				os.flush();
-				
-				long endTime = System.nanoTime();
-				
-				peer.throughput = (double)ConnectToTracker.torrentI.piece_length / ((endTime - startTime)/1000000000.0);
-				//FileChunks.uploaded += length; //we can add this later if we want to count uploaded amount
-			} else {
-				System.out.println("no I don't have this piece " + index);
-			}
-		} else {
-			//other messages received that is neither have nor request
+			}else if (msg == Message.MSG_HAVE){
+					try {
+						// read the next request
+						msg = Peer.readMessage(); 
+					} catch (Exception e) {
+						// no following messages
+						return;
+					}
+
+			}else {
+					// other messages received
+				}
+
 		}
-	
 	}
 
 	public void isStopped() throws IOException{
