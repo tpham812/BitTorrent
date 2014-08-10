@@ -133,16 +133,17 @@ public class Upload implements Runnable{
 					os.write(pieceMsg.message);
 					os.flush();
 
-					if(msg == Message.MSG_HAVE){
+					int msg2 = Peer.readMessage();
+					if(msg2 == Message.MSG_HAVE){
 						endTime = System.nanoTime();					
 						if(index == lastPieceIndex){
-					peer.throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
+							peer.throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
 						else {
-					peer.throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
+							peer.throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
 						}
 					}else{
-					System.out.println("No Have message received.");
-					//need to end timer					
+						System.out.println("No Have message received.");
+						//need to end timer					
 					}
 
 				}else {
