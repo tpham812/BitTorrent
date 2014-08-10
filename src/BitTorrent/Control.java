@@ -51,12 +51,17 @@ public class Control {
 				randomUnchoke();
 				//read message to see if they are have messages.
 			} else {	
+				randomUnchoke(); 
 				int msgfrPeer2 = Peer.readMessage();  		
 					if(msgfrPeer2 == Message.MSG_HAVE || msgfrPeer2 == Message.MSG_BITFIELD){
 						PeerConnectionsInfo.unchokedPeers.add(peer);
 						System.out.println("Peer has something to share! Peer is unchoked.");					
-					}	
-					randomUnchoke(); 
+					} else {
+						PeerConnectionsInfo.chokedPeers.add(peer);
+						System.out.println("Peer has nothing to share. Peer is choked");
+						
+					}
+
 			} 
 		} else{
 			peer.closeConnection();
