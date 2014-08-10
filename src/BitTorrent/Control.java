@@ -24,10 +24,15 @@ public class Control {
 
 
 
-	//Keep track of uploaded peers, call ConnectionCount
-	//If Upload is already 6, then we cannot unchoke anyone
-	//If less than 3 download peers and peer is interested, let connect
-	//If 30 second timer wakes, choke worst peer and unchoke randomly. 
+	/**
+	 * @param peer
+	 * @throws IOException
+	 * This method accesses the list of unchoked peer connections
+	 * in order to determine whether we can connect to upload to 
+	 * more peers. It also checks if the peer has a bitfield or have
+	 * message as well as calls randomUnchoke() in order to implement
+	 * the optimistic unchoke function.
+	 */
 	public void unchoke(Peer peer) throws IOException{
 		
 
@@ -51,29 +56,36 @@ public class Control {
 						PeerConnectionsInfo.unchokedPeers.add(peer);
 						System.out.println("Peer has something to share! Peer is unchoked.");					
 					}	
-			}
+					randomUnchoke(); 
+			} 
 		} else{
 			peer.closeConnection();
-			//!!!!!!!make closeConnnection static without socket error
-			//peer is uninterested, 
+			//peer is uninterested; we did not receive an interested message. 
 			
 
 
 		}
 	}
 	
+	/**
+	 * This method implements the optimistic unchoke functionality. 
+	 * When the 30 second timer is up, it chooses the unchoked peer
+	 * with the worst throughput, unchokes it, and randomly picks a
+	 * choked peer as the optimistic choke.  
+	 */
 	public void randomUnchoke(){
 		
 		Peer optimisticUnchoke;
 		Peer chokedPeer = null;
-		double currTP = 0;
-		double leastTP = 0;
-		
+		double currTP = 0.0;
+		double leastTP = 999999999999999999999.0; //some very big number			
 		//IF timer is up, PLACE THIS HERE!!!!!
+		
+
 		for (int i = 0; i < PeerConnectionsInfo.unchokedPeers.size(); i++){
 			//compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer);
 			currTP = PeerConnectionsInfo.unchokedPeers.get(i).throughput;
-			if(currTP < leastTP){
+			if(currTP < leastTP || currTP == leastTP){
 				leastTP = currTP;
 				chokedPeer = PeerConnectionsInfo.unchokedPeers.get(i);
 			}
