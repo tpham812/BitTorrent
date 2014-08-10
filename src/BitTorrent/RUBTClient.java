@@ -71,52 +71,24 @@ public class RUBTClient {
 	 */
 	@SuppressWarnings("rawtypes")
 	public static int startDownload(File torrent_File, String fileName) throws IOException {
-		HashMap peer_Map = null, response = null;
+		HashMap response = null;
 		ArrayList list = null;
-		String peerID ="", peerIP = "";
 		boolean found = false;
-		int peerPort = 0;
-
+		Control ctrl = new Control();
 		ConnectToTracker ct = new ConnectToTracker();
+		
 		response = ct.getTrackerResponse(torrent_File, fileName); /**Get tracker response*/
 		if(response == null) return 1;
 		list = (ArrayList)response.get(ConnectToTracker.KEY_PEERS);
-		int trackInterval;
-
-		if(response.containsKey(ConnectToTracker.KEY_MIN_INTERVAL)){
-			trackInterval= (int)response.get(ConnectToTracker.KEY_MIN_INTERVAL);
-		}else{
-			trackInterval= ((int)response.get(ConnectToTracker.KEY_INTERVAL))/2;
-			if (trackInterval>180){/**cap at 180 seconds*/
-				trackInterval=180;
-			}
-		}
+		
 		/**Request new tracker response if peers not found*/
 
 		KeepAliveThread kat = new KeepAliveThread();
 		kat.run();
 
 		do {
-			for(int i = 0; i < list.size(); i++){
-				peer_Map = (HashMap)list.get(i);
-				peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
-				peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
-				peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);	
-				if((peerIP.equalsIgnoreCase("128.6.5.131")) || (peerIP.equalsIgnoreCase("128.6.5.130")) ) {
-					found = true;
-					Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
-					if(temp.openConnection()){
-						temp.getBitField();
-						if(temp.boolBitField!=null){
-							PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
-							PeerConnectionsInfo.downloadPeers.add(temp);
-						}else{
-							temp.closeConnection();
-						}
-					}
-				}
-			}
-
+			found = ctrl.extractPeers(list);
+			
 			/**If peer can't be found, sleep and then request a new response from tracker*/
 			if(!found) {
 				try {
@@ -136,40 +108,12 @@ public class RUBTClient {
 			}
 		}while(!found);
 
-
-		TrackerIntervalThread tit = new TrackerIntervalThread(trackInterval);
-		tit.run();
-
-		Control ctrl = new Control();
-		boolean done = ctrl.startPeers();
-		FileChunks fc = new FileChunks(fileName);
-		ctrl.makeThreads(fc);
-		if(!done){
-			//MESSAGE TRACKER FOR NEW LIST AGAIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			//how to deal with tit and not did in conjunction with threads working??!!!!
-			//need to seperate this function basically and keep calling send messsage to tracker.
-		}else{
-			kat.EndThread();
-			tit.EndThread();
-		}
-
 		try {
 
 			ConnectToTracker.sendMessageToTracker(Event.sendStoppedEvent(), "stopped");
 		} catch (Exception e) {
 			System.out.println("Couldn't send stop event message.");
 		}
-		closeAllConnections();
-
-
 		return 0;
-
-	}
-
-	/**closes connections to all the peers in pci*/
-	private static void closeAllConnections() {
-		for (int j = 0; j< PeerConnectionsInfo.downloadPeers.size();j++){
-			PeerConnectionsInfo.downloadPeers.get(j).closeConnection();
-		}
 	}
 }

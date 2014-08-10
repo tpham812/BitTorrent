@@ -1,7 +1,9 @@
 package BitTorrent;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -186,5 +188,54 @@ public class Control {
 		}
 
 	}
+	
+	public boolean extractPeers(ArrayList list) throws IOException {
+		
+		HashMap peer_Map = null;
+		String peerID ="", peerIP = "";
+		int peerPort = 0;
+		boolean found = false;
+		
+		for(int i = 0; i < list.size(); i++){
+			peer_Map = (HashMap)list.get(i);
+			peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
+			peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
+			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);	
+			if((peerIP.equalsIgnoreCase("128.6.5.131")) || (peerIP.equalsIgnoreCase("128.6.5.130")) ) {
+				found = true;
+				Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
+				if(temp.openConnection()){
+					temp.getBitField();
+					if(temp.boolBitField!=null){
+						PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
+						PeerConnectionsInfo.downloadPeers.add(temp);
+					}else{
+						temp.closeConnection();
+					}
+				}
+			}
+		}
+		return found;
+	}
+	
+	public int getTrackerInterval(HashMap response) {
+		
+		int trackInterval;
 
+		if(response.containsKey(ConnectToTracker.KEY_MIN_INTERVAL)){
+			trackInterval= (int)response.get(ConnectToTracker.KEY_MIN_INTERVAL);
+		}else{
+			trackInterval= ((int)response.get(ConnectToTracker.KEY_INTERVAL))/2;
+			if (trackInterval>180){/**cap at 180 seconds*/
+				trackInterval=180;
+			}
+		}
+		return trackInterval;
+	}
+	
+	public void closeAllConnections() {
+		for (int j = 0; j< PeerConnectionsInfo.downloadPeers.size();j++){
+			PeerConnectionsInfo.downloadPeers.get(j).closeConnection();
+		}
+	}
 }

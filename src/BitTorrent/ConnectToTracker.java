@@ -208,7 +208,7 @@ public class ConnectToTracker {
 	 * Update downloaded and left
 	 * @param amount Amount of bytes recently downloaded
 	 */
-	public static void updateAmounts(int amount) {
+	public static synchronized void updateAmounts(int amount) {
 
 		downloaded = downloaded + amount;
 		left = left - downloaded;
