@@ -82,6 +82,7 @@ public class RUBTClient {
 		if(response == null) return 1;
 		list = (ArrayList)response.get(ConnectToTracker.KEY_PEERS);
 		int trackInterval;
+
 		if(response.containsKey(ConnectToTracker.KEY_MIN_INTERVAL)){
 			trackInterval= (int)response.get(ConnectToTracker.KEY_MIN_INTERVAL);
 		}else{
@@ -91,6 +92,10 @@ public class RUBTClient {
 			}
 		}
 		/**Request new tracker response if peers not found*/
+
+		KeepAliveThread kat = new KeepAliveThread();
+		kat.run();
+
 		do {
 			for(int i = 0; i < list.size(); i++){
 				peer_Map = (HashMap)list.get(i);
@@ -102,8 +107,12 @@ public class RUBTClient {
 					Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 					if(temp.openConnection()){
 						temp.getBitField();
-						PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
-						PeerConnectionsInfo.downloadPeers.add(temp);
+						if(temp.boolBitField!=null){
+							PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
+							PeerConnectionsInfo.downloadPeers.add(temp);
+						}else{
+							temp.closeConnection();
+						}
 					}
 				}
 			}
@@ -127,11 +136,10 @@ public class RUBTClient {
 			}
 		}while(!found);
 
-		KeepAliveThread kat = new KeepAliveThread();
-		kat.run();
+
 		TrackerIntervalThread tit = new TrackerIntervalThread(trackInterval);
 		tit.run();
-		
+
 		Control ctrl = new Control();
 		boolean done = ctrl.startPeers();
 		FileChunks fc = new FileChunks(fileName);

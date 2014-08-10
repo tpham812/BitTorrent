@@ -129,10 +129,11 @@ public class Peer {
 				if(ConnectToTracker.torrentI.piece_hashes.length != bitField.length){
 					/**the number of chunks = the length of the bitField!!*/
 					System.out.println("The peer is not sending us the correct length bitfield");
-//EXIT AFTER HERE AND AFTER 141??!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					this.boolBitField=null;
 				}
 			}else{
 				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
+				this.boolBitField=null;
 			}
 		}
 		

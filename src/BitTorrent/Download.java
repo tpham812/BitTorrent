@@ -35,6 +35,7 @@ public class Download implements Runnable {
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
+	boolean[] haveCunks;
 	
 	private static Peer peer;
 	private FileChunks fc;	
@@ -52,6 +53,7 @@ public class Download implements Runnable {
 
 		this.peer = peer;
 		this.fc = fc;
+		//this.chunksHashes = fc
 		
 				
 	}
