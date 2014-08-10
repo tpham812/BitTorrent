@@ -83,9 +83,9 @@ public class Message {
 	
 
 	/**
-	 * @param requestIndex The index of the chunk
-	 * @param currentDL Currently downloaded bytes
-	 * @param numChunks The chunk of the data
+	 * @param Index integer specifying the zero-based piece index
+	 * @param begin zero-based byte offset within the piece 
+	 * @param block integer specifying the requested length
 	 * 
 	 * This method sets the payload for messages that are type HAVE, REQUEST, or PIECE.
 	 * If it is not one of those messages, it outputs an error.  
