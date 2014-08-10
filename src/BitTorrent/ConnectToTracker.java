@@ -38,6 +38,7 @@ public class ConnectToTracker {
 	public static  TorrentInfo torrentI; 
 	/**Stores infohash*/
 	public static ByteBuffer infoHash;
+	public static String fileoutArg;
 	/**Generated peer ID*/
 	public static byte[] ourPeerID;
 	/**Key used to retrieve peer list*/
@@ -48,6 +49,10 @@ public class ConnectToTracker {
 	public final static ByteBuffer KEY_PEER_IP = ByteBuffer.wrap(new byte[]{ 'i', 'p'});
 	/**Key used to retrieve peer ID*/
 	public final static ByteBuffer KEY_PEER_ID = ByteBuffer.wrap(new byte[]{'p', 'e', 'e', 'r', ' ', 'i', 'd'});
+	/**used to retrieve the interval for tracker scrapes*/
+	public final static ByteBuffer KEY_INTERVAL= ByteBuffer.wrap(new byte[]{'i','n','t','e','r','v','a','l'});
+	/**used to retrieve the mind interval for tracker scrapes*/
+	public final static ByteBuffer KEY_MIN_INTERVAL= ByteBuffer.wrap(new byte[]{'m','i','n','i','n','t','e','r','v','a','l'});
 
 	/**
 	 * Connect to tracker and receive a tracker response
@@ -56,7 +61,7 @@ public class ConnectToTracker {
 	 * @return response of the tracker in an array list
 	 */
 	public HashMap getTrackerResponse(File torrent_file, String fileName) {
-
+		this.fileoutArg = fileName;
 		HashMap trackerAnswer = null;
 		System.out.println("Connecting to tracker. Please wait.");
 		/**Get byte array of torrent file*/

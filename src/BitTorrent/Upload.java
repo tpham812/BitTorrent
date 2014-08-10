@@ -117,7 +117,7 @@ public class Upload implements Runnable{
 		int lastPieceIndex = fileLength - 1;
 		
 		while(true){
-			int msg = Peer.readMessage();
+			int msg = peer.readMessage();
 			if(msg == Message.MSG_REQUEST){
 
 				index = in.readInt();
@@ -133,7 +133,7 @@ public class Upload implements Runnable{
 					os.write(pieceMsg.message);
 					os.flush();
 
-					int msg2 = Peer.readMessage();
+					int msg2 = peer.readMessage();
 					if(msg2 == Message.MSG_HAVE){
 						endTime = System.nanoTime();					
 						if(index == lastPieceIndex){
@@ -152,7 +152,7 @@ public class Upload implements Runnable{
 			}else if (msg == Message.MSG_HAVE){
 					try {
 						// read the next request
-						msg = Peer.readMessage(); 
+						msg = peer.readMessage(); 
 					} catch (Exception e) {
 						// no following messages
 						return;

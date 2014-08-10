@@ -10,7 +10,7 @@ public class TrackerIntervalThread implements Runnable {
 		end = false;
 		this.seconds = seconds;
 	}
-	public void endThread() {
+	public void EndThread() {
 		
 		end = true;
 	}

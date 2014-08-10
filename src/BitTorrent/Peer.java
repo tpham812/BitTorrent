@@ -8,29 +8,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Peer { 
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//put all of the important fields betweeen upeer and dpeer here
-	//shorten the giant constructors in both of them!!???
-	//this should be able to close streams and initalize the streams only? 
-	//what else can it do?
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 	static boolean isChoked;
 	public double throughput;
-	public static int port;
+	public int port;
 	public byte[] id;
-	public static String ip;
-	public static DataOutputStream os;
-	public static DataInputStream is;
-	public static byte[] ourID;
+	public String ip;
+	public DataOutputStream os;
+	public DataInputStream is;
+	public byte[] ourID;
 	public byte[] bitField;
 	public boolean[] boolBitField;
 	public TorrentInfo torrentI;
 	/**Socket connection to the peer*/
 	public Socket socket;
-	protected final static byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
+	protected final byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
 	/**Eight zeroes field to write in the handshake message*/
-	protected final static  byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
+	protected final byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 
 	public Peer(String ip, byte[] id, int port) throws IOException {
@@ -128,13 +122,18 @@ public class Peer {
 		System.out.println("Reading message from peer.");
 		int read = readMessage();
 		System.out.println("Finished reading message from peer.");
-		byte[] bitField = new byte[is.available()];
+		bitField = new byte[is.available()];
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
-			is.readFully(bitField); /**get rid of bit field*/
-			
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			//implement rare piece stuff!!!
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			if (read==5){
+				is.readFully(bitField); /**get rid of bit field*/
+				if(ConnectToTracker.torrentI.piece_hashes.length != bitField.length){
+					/**the number of chunks = the length of the bitField!!*/
+					System.out.println("The peer is not sending us the correct length bitfield");
+//EXIT AFTER HERE AND AFTER 141??!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				}
+			}else{
+				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
+			}
 		}
 
 	}
@@ -144,7 +143,7 @@ public class Peer {
 	 * @return message byte as int is returned 
 	 * @throws IOException
 	 */
-	static byte readMessage() throws IOException {
+	public byte readMessage() throws IOException {
 
 		/**Read in message*/
 		int msgLength = is.readInt();

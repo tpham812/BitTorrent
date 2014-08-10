@@ -37,7 +37,7 @@ public class Download implements Runnable {
 	private ByteBuffer[] chunksHashes; 
 	
 	private static Peer peer;
-	
+	private PeerConnectionsInfo pci;
 	private FileChunks fc;	
 
 	/**
@@ -49,10 +49,11 @@ public class Download implements Runnable {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public Download(Peer peer, FileChunks fc) throws IOException, InterruptedException{
+	public Download(Peer peer, FileChunks fc, PeerConnectionsInfo pci) throws IOException, InterruptedException{
 
 		this.peer = peer;
 		this.fc = fc;
+		this.pci = pci;
 		
 				
 	}
@@ -124,13 +125,18 @@ public class Download implements Runnable {
 				peer.os.write(askForPieces.message);
 				peer.os.flush();
 				
-				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				
 				tempBuff = new byte[4];  /**remove unnecessary bytes*/
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=peer.is.readByte();
 				}
+				int id = peer.is.readInt();
+				if (id == 0){
+					//choked in middle of download
+					//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				}
 				chunk = new byte[index];
-				for (int l = 0; l<9;l++){
+				for (int l = 0; l<5;l++){
 					peer.is.readByte();
 				}
 
@@ -177,8 +183,9 @@ public class Download implements Runnable {
 					ConnectToTracker.sendMessageToTracker(null, null);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
-					peer.os.write(have.message);
-					peer.os.flush();/**push message to stream*/
+					
+					writeHavetoAllPeers(have);
+				
 				}
 				block++;
 
@@ -195,9 +202,13 @@ public class Download implements Runnable {
 				for (int k = 0; k<4;k++){
 					tempBuff[k]=peer.is.readByte();
 				}
-
+				int id = peer.is.readInt();
+				if (id == 0){
+					//choked in middle of download
+					//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				}
 				chunk = new byte[index]; /**create piece length size chunk*/
-				for (int l = 0; l<9;l++){
+				for (int l = 0; l<5;l++){
 					peer.is.readByte();
 				}
 				for (int m = 0 ; m<index;m++){
@@ -244,8 +255,7 @@ public class Download implements Runnable {
 					ConnectToTracker.sendMessageToTracker(null, null);
 					have = new Message(5,(byte)4);
 					have.setPayload(index, begin, block);
-					peer.os.write(have.message);
-					peer.os.flush();/**push message to stream*/
+					writeHavetoAllPeers(have);
 					if (begin+index==peer.torrentI.piece_length){
 						block++;
 						begin = 0;
@@ -261,6 +271,21 @@ public class Download implements Runnable {
 		peer.closeConnection();
 		return;
 	}
+	
+	/**sends have message to all peers when we have a chunk stored!*/
+	private void writeHavetoAllPeers(Message have) {
+		
+		for (int i = 0; i<pci.subsetDPeers.size();i++){
+			try {
+				PeerConnectionsInfo.subsetDPeers.get(i).os.write(have.message);
+				PeerConnectionsInfo.subsetDPeers.get(i).os.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/**
 	 * Makes sure the chunk given is not already present in the Hashes array 
 	 * This helps avoid duplicate chunks.

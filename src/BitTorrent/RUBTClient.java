@@ -69,6 +69,7 @@ public class RUBTClient {
 	 * @param fileName File name to store 
 	 * @throws IOException 
 	 */
+	@SuppressWarnings("rawtypes")
 	public static int startDownload(File torrent_File, String fileName) throws IOException {
 		HashMap peer_Map = null, response = null;
 		ArrayList list = null;
@@ -80,7 +81,17 @@ public class RUBTClient {
 		response = ct.getTrackerResponse(torrent_File, fileName); /**Get tracker response*/
 		if(response == null) return 1;
 		list = (ArrayList)response.get(ConnectToTracker.KEY_PEERS);
+		int trackInterval;
+		if(response.containsKey(ConnectToTracker.KEY_MIN_INTERVAL)){
+			trackInterval= (int)response.get(ConnectToTracker.KEY_MIN_INTERVAL);
+		}else{
+			trackInterval= ((int)response.get(ConnectToTracker.KEY_INTERVAL))/2;
+			if (trackInterval>180){/**cap at 180 seconds*/
+				trackInterval=180;
+			}
+		}
 		/**Request new tracker response if peer RU1103 is not found*/
+		PeerConnectionsInfo pci = new PeerConnectionsInfo();
 		do {
 			/**Look for peer RU1103 from list*/
 			for(int i = 0; i < list.size(); i++){
@@ -93,9 +104,9 @@ public class RUBTClient {
 					Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 					if(temp.openConnection()){
 						temp.getBitField();
-
+						pci.peers.put(temp.boolBitField, temp);
+						pci.downloadPeers.add(temp);
 					}
-
 				}
 			}
 
@@ -118,6 +129,23 @@ public class RUBTClient {
 			}
 		}while(!found);
 
+		KeepAliveThread kat = new KeepAliveThread();
+		kat.run();
+		TrackerIntervalThread tit = new TrackerIntervalThread(trackInterval);
+		tit.run();
+		
+		Control ctrl = new Control();
+		boolean done = ctrl.startPeers(pci);
+		FileChunks fc = new FileChunks(fileName);
+		ctrl.makeThreads(fc);
+		if(!done){
+			//MESSAGE TRACKER FOR NEW LIST AGAIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//how to deal with tit and not did in conjunction with threads working??!!!!
+			//need to seperate this function basically and keep calling send messsage to tracker.
+		}else{
+			kat.EndThread();
+			tit.EndThread();
+		}
 
 		try {
 
@@ -125,9 +153,17 @@ public class RUBTClient {
 		} catch (Exception e) {
 			System.out.println("Couldn't send stop event message.");
 		}
+		closeAllConnections(pci);
 
 
 		return 0;
 
+	}
+
+	/**closes connections to all the peers in pci*/
+	private static void closeAllConnections(PeerConnectionsInfo pci) {
+		for (int j = 0; j< pci.downloadPeers.size();j++){
+			pci.downloadPeers.get(j).closeConnection();
+		}
 	}
 }

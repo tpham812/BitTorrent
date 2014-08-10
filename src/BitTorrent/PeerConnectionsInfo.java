@@ -12,7 +12,7 @@ public class PeerConnectionsInfo {
 	public static List<Peer> unchokedPeers = new ArrayList<Peer>();
 	public static List<Peer> chokedPeers = new ArrayList<Peer>();
 	public static List<Peer> downloadPeers = new ArrayList<Peer>();
-	
-	public static HashMap<byte[],Peer> peers = new HashMap<byte[], Peer>();
+	public static List<Peer> subsetDPeers = new ArrayList<Peer>();
+	public static HashMap<boolean[],Peer> peers = new HashMap<boolean[], Peer>();
 		
 }
