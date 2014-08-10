@@ -10,7 +10,7 @@ public class Control {
 	 * Connect to tracker and get a list of peers. Find the right peer and connects to it to begin download
 	 * @param list the list of peers.
 	 */
-	public static void startPeers(ArrayList list) {
+	public void startPeers(ArrayList list) {
 		try {
 			/**Connect to peer*/
 			//Download peer = new Download(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort, fileName);
@@ -28,7 +28,7 @@ public class Control {
 	//If Upload is already 6, then we cannot unchoke anyone
 	//If less than 3 download peers and peer is interested, let connect
 	//If 30 second timer wakes, choke worst peer and unchoke randomly. 
-	public static void unchoke(Peer peer) throws IOException{
+	public void unchoke(Peer peer) throws IOException{
 		
 
 		//read message from peer to see if they are interested.
@@ -53,7 +53,7 @@ public class Control {
 					}	
 			}
 		} else{
-			//Peer.closeConnection(); 
+			peer.closeConnection();
 			//!!!!!!!make closeConnnection static without socket error
 			//peer is uninterested, 
 			
@@ -62,7 +62,7 @@ public class Control {
 		}
 	}
 	
-	public static void randomUnchoke(){
+	public void randomUnchoke(){
 		
 		Peer optimisticUnchoke;
 		Peer chokedPeer = null;
