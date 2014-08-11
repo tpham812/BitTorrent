@@ -152,8 +152,16 @@ public class Download implements Runnable {
 			tempBuff[k]=peer.is.readByte();
 		}
 		int id = peer.is.readInt();
-		if (id == 0){ //got choked in the middle of download
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if (id == 0){ //set got chocked variable and timeout till unchocked
+			peer.isChoked = true;
+			while (peer.isChoked==true){
+				peer.socket.setSoTimeout(60000); //take this out because of next line?????!!!!!!!!
+				int read = peer.readMessage();//get stuck here till we get a message unchocking us.
+				if(read==1){//got unchocked!
+					peer.isChoked=false;
+				}
+			}
+			//!!!!!!!!!!!!!we have to wait til we are unchocked!!!!! so timeout time = ??????????
 		}
 		chunk = new byte[index];
 		for (int l = 0; l<5;l++){
