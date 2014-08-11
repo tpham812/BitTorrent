@@ -4,12 +4,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Peer { 
 	
-	static boolean isChoked;
+	boolean isChoked;
 	public double throughput;
 	public int port;
 	public byte[] id;
@@ -160,7 +161,7 @@ public class Peer {
 		switch(id){
 		case 0://choked
 			System.out.println("Choked on ip: "+ip+" on port: "+port);
-			Download.gotChoked(); 
+			gotChoked(); 
 			if (isChoked==true){
 				return -2;
 			}
@@ -172,6 +173,27 @@ public class Peer {
 			int begin = is.readInt();	
 		default: return id;
 		}
+	}
+	
+	/**
+	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
+	 * @throws SocketException
+	 */
+	public void gotChoked() throws SocketException{
+		isChoked = true;
+		socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
+		do{
+			try {
+				if (readMessage()==1){
+					System.out.println("Got unchoked before time interval ended.");
+					isChoked=false;
+					return;
+				}
+			} catch (IOException e) {
+				System.out.println("Timed out waiting to be unchoked! Finishing Connection.");
+				return;
+			}
+		}while (isChoked==true);
 	}
 	
 	/** 

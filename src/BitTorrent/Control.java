@@ -186,7 +186,6 @@ public class Control {
 				System.out.println("Error: Could not create Thread to run!");
 			} 
 		}
-
 	}
 	
 	public boolean extractPeers(ArrayList list) throws IOException {

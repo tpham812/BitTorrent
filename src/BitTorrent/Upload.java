@@ -22,23 +22,6 @@ import java.util.ArrayList;
 
 public class Upload implements Runnable{
 
-	/**Socket connection to the peer*/
-	private Socket socket;
-	/**Output stream to the peer*/
-	private DataOutputStream os;
-	/**Input stream from the peer*/
-	private DataInputStream in;
-	/**IP address of peer*/
-	private String IP;
-	/**Port number of peer*/
-	private int port;
-	/**ID of the peer*/
-	private byte[] ID;
-	/**Our ID sent to tracker when we were a download peer*/
-	private byte[] ourID;
-	/**Torrent Info file that comes from the .torrent file*/
-	private TorrentInfo torrentInfo;
-
 	private Peer peer;
 
 	private FileChunks fc;
@@ -53,7 +36,7 @@ public class Upload implements Runnable{
 	public void receiveHandshake(byte[] info_hash) throws IOException{
 		//read handshake from download peer
 		byte[] receiveHandshake =  new byte[68];
-		in.readFully(receiveHandshake);
+		peer.is.readFully(receiveHandshake);
 
 		//send handshake back
 		byte[] returnShake = new byte[68];
@@ -61,20 +44,20 @@ public class Upload implements Runnable{
 		System.arraycopy(peer.BitProtocol, 0,returnShake,1,19);
 		System.arraycopy(peer.eightZeros, 0, returnShake, 20, 8);
 		System.arraycopy(info_hash,0, returnShake, 28, 20);
-		System.arraycopy(ourID, 0, returnShake, 48, 20);
+		System.arraycopy(ConnectToTracker.ourPeerID, 0, returnShake, 48, 20);
 
 		if(receiveHandshake[0] != (byte) 19){
 			System.out.println("Not a Bit Torrent Protocol.");
 		} else{
-			os.write(returnShake);
-			os.flush();
+			peer.os.write(returnShake);
+			peer.os.flush();
 		}
 
 		//send bitfield message before unchoke
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		System.out.println("Sending bitfield message to peer.");
-		os.write(bitfieldMsg.message);
-		os.flush();/**push message to stream*/
+		peer.os.write(bitfieldMsg.message);
+		peer.os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
 
 
@@ -82,8 +65,8 @@ public class Upload implements Runnable{
 		if(PeerConnectionsInfo.unchokedPeers.contains(peer)){
 			Message unchokeMsg = new Message(1,(byte)1); /**create unchoke message*/
 			System.out.println("Writing unchoke message to peer.");
-			os.write(unchokeMsg.message);
-			os.flush();/**push message to stream*/
+			peer.os.write(unchokeMsg.message);
+			peer.os.flush();/**push message to stream*/
 			System.out.println("Finished unchoke writing message to peer.");
 			upload();
 
@@ -91,12 +74,10 @@ public class Upload implements Runnable{
 			//choke msg 
 			Message chokeMsg = new Message(1,(byte)0); /**create choke message*/
 			System.out.println("Writing choke message to peer.");
-			os.write(chokeMsg.message);
-			os.flush();/**push message to stream*/
+			peer.os.write(chokeMsg.message);
+			peer.os.flush();/**push message to stream*/
 			System.out.println("Finished writing message to peer.");
 		}
-
-
 	}
 
 
@@ -120,9 +101,9 @@ public class Upload implements Runnable{
 			int msg = peer.readMessage();
 			if(msg == Message.MSG_REQUEST){
 
-				index = in.readInt();
-				begin = in.readInt();
-				length = in.readInt();
+				index = peer.is.readInt();
+				begin = peer.is.readInt();
+				length = peer.is.readInt();
 
 				if(FileChunks.ourBitField[index] == true){
 					block = new byte[length];
@@ -130,8 +111,8 @@ public class Upload implements Runnable{
 					pieceMsg = new Message(9 + length, (byte) 7);
 					pieceMsg.setPayload(index, begin, length);
 					startTime = System.nanoTime();
-					os.write(pieceMsg.message);
-					os.flush();
+					peer.os.write(pieceMsg.message);
+					peer.os.flush();
 
 					int msg2 = peer.readMessage();
 					if(msg2 == Message.MSG_HAVE){
@@ -161,7 +142,6 @@ public class Upload implements Runnable{
 			}else {
 					// other messages received
 				}
-
 		}
 	}
 

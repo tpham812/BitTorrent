@@ -22,8 +22,7 @@ public class Download implements Runnable {
 	private ByteBuffer[] chunksHashes; 
 	boolean[] boolhaveChunks;
 	boolean[] peerChunks;
-
-	private static Peer peer;
+	private Peer peer;
 	private FileChunks fc;	
 
 	/**
@@ -37,7 +36,7 @@ public class Download implements Runnable {
 	 */
 	public Download(Peer peer, FileChunks fc) throws IOException, InterruptedException{
 
-		Download.peer = peer;
+		this.peer = peer;
 		this.fc = fc;
 		this.boolhaveChunks= new boolean[FileChunks.ourBitField.length];
 		for (int i = 0; i<boolhaveChunks.length;i++){
@@ -254,31 +253,13 @@ public class Download implements Runnable {
 		return true;
 	}
 
-	/**
-	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
-	 * @throws SocketException
-	 */
-	static void gotChoked() throws SocketException{
-		Peer.isChoked = true;
-		peer.socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
-		do{
-			try {
-				if (peer.readMessage()==1){
-					System.out.println("Got unchoked before time interval ended.");
-					Peer.isChoked=false;
-					return;
-				}
-			} catch (IOException e) {
-				System.out.println("Timed out waiting to be unchoked! Finishing Connection.");
-				return;
-			}
-		}while (Peer.isChoked==true);
-	}
+
 
 
 
 	@Override
 	public void run() {
+	
 		try {
 			downloadFileFromPeer();
 		} catch (Exception e) {

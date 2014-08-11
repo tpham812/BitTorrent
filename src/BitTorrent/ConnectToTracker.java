@@ -36,6 +36,9 @@ public class ConnectToTracker {
 	private static HttpURLConnection connection;
 	/**TorrentInfo to access torrent information*/
 	public static  TorrentInfo torrentI; 
+	
+	public  HashMap response;
+	
 	/**Stores infohash*/
 	public static ByteBuffer infoHash;
 	public static String fileoutArg;
@@ -61,8 +64,8 @@ public class ConnectToTracker {
 	 * @return response of the tracker in an array list
 	 */
 	public HashMap getTrackerResponse(File torrent_file, String fileName) {
+		
 		this.fileoutArg = fileName;
-		HashMap trackerAnswer = null;
 		System.out.println("Connecting to tracker. Please wait.");
 		/**Get byte array of torrent file*/
 		byte[] torrentFile = Helper.getBytesFromFile(torrent_file); 
@@ -80,12 +83,12 @@ public class ConnectToTracker {
 			/**Send message to tracker*/
 			sendMessageToTracker();
 			/**Get tracker response*/
-			trackerAnswer = getMessageFromTracker(); 
+			getMessageFromTracker(); 
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 			return null;
 		}
-		return trackerAnswer;
+		return response;
 	}
 
 	/**
@@ -94,16 +97,15 @@ public class ConnectToTracker {
 	 */
 	public HashMap requestNewReponse() {
 
-		HashMap trackerAnswer = null;
 		try {
 			/**Send message to tracker */
 			sendMessageToTracker(null, null);
 			/**Decoded response from tracker */
-			trackerAnswer = getMessageFromTracker();
+			getMessageFromTracker();
 		} catch (Exception e) {
 			System.out.println("Error: tracker message could not be obtained.");
 		}
-		return trackerAnswer;
+		return response;
 	}
 
 	/**
@@ -174,7 +176,7 @@ public class ConnectToTracker {
 	 * Receive a message from tracker and return a decoded response
 	 * @return Decoded response in a hash map
 	 */
-	public HashMap getMessageFromTracker() {
+	public void getMessageFromTracker() {
 
 		//get tracker response, decode it and extract list of peers and their ids.
 		HashMap tracker_decoded_response = null;
@@ -194,14 +196,13 @@ public class ConnectToTracker {
 			System.out.println("Starting decoding response.");
 
 			/**Decode tracker response*/
-			tracker_decoded_response =  (HashMap)Bencoder2.decode(trackerAnswer);
+			response =  (HashMap)Bencoder2.decode(trackerAnswer);
 			System.out.println("Finsihed decoding response.");
 		} catch (Exception e) {
 			System.out.println("Error: Cannot get tracker response.");
-			return null;
+			return;
 		}
 		System.out.println("Got response.");
-		return tracker_decoded_response;
 	}
 
 	/**
