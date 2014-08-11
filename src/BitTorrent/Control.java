@@ -57,11 +57,13 @@ public class Control {
 					index = i;
 					smallest=bfDS[i].sum;
 					bfDS[i].sum = Integer.MAX_VALUE;
+					bf[i]=true;
 				}
 			}
+			Random rand = new Random();
 			if (!inSubset(subset, bfDS[index])){
-				subset.add(bfDS[index].lp.get(0)); //get first peer that has that index
-			}
+				subset.add(bfDS[index].lp.get(rand.nextInt(bfDS[index].lp.size()-0)+1)); //get first peer that has that index
+			}//gets random peer in the list of peers and make sure they are not already in the peers to connect to
 		}
 
 		if (fullBitField(bf)==true){
@@ -83,7 +85,7 @@ public class Control {
 	/**sees if bitfield is not full or not. if bitfield is not full then we need more chunks*/
 	private boolean fullBitField(boolean[] bf){ 
 		for (int i = 0; i< bf.length;i++){
-			if (bf[i]==false){
+			if ((FileChunks.ourBitField[i]==false) && (bf[i]==false)){
 				return false;
 			}
 		}
@@ -187,14 +189,14 @@ public class Control {
 			} 
 		}
 	}
-	
+
 	public boolean extractPeers(ArrayList list) throws IOException {
-		
+
 		HashMap peer_Map = null;
 		String peerID ="", peerIP = "";
 		int peerPort = 0;
 		boolean found = false;
-		
+
 		for(int i = 0; i < list.size(); i++){
 			peer_Map = (HashMap)list.get(i);
 			peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
@@ -216,9 +218,9 @@ public class Control {
 		}
 		return found;
 	}
-	
+
 	public int getTrackerInterval(HashMap response) {
-		
+
 		int trackInterval;
 
 		if(response.containsKey(ConnectToTracker.KEY_MIN_INTERVAL)){
@@ -231,7 +233,7 @@ public class Control {
 		}
 		return trackInterval;
 	}
-	
+
 	public void closeAllConnections() {
 		for (int j = 0; j< PeerConnectionsInfo.downloadPeers.size();j++){
 			PeerConnectionsInfo.downloadPeers.get(j).closeConnection();
