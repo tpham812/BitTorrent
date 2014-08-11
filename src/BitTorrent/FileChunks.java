@@ -13,7 +13,7 @@ public class FileChunks {
 	/**Final name of the output file as given as the second argument to the program*/
 	private String fileOutArg;
 	/**Array of chunks to be stored*/
-	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+	public static ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Boolean version of our bitfield which will be the most up to date by the download peer*/
 	public static boolean[] ourBitField;
 	

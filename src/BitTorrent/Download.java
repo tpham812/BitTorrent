@@ -20,7 +20,7 @@ public class Download implements Runnable {
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
-	boolean[] haveChunks;
+	boolean[] boolhaveChunks;
 	boolean[] peerChunks;
 
 	private static Peer peer;
@@ -39,7 +39,10 @@ public class Download implements Runnable {
 
 		Download.peer = peer;
 		this.fc = fc;
-		this.haveChunks= FileChunks.ourBitField;
+		this.boolhaveChunks= new boolean[FileChunks.ourBitField.length];
+		for (int i = 0; i<boolhaveChunks.length;i++){
+			boolhaveChunks[i] = FileChunks.ourBitField[i];
+		}
 		this.peerChunks = peer.boolBitField;
 	}
 
@@ -83,10 +86,8 @@ public class Download implements Runnable {
 		System.out.println("Started downloading chunks.");
 
 		ConnectToTracker.sendMessageToTracker(Event.sendStartedEvent(), "started");
-		for(int i = 0; i<this.haveChunks.length;i++){
-			//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			//update index and begin based on what block it is!
-			if((haveChunks[i]==false) && (peerChunks[i]==true)){
+		for(int i = 0; i<this.boolhaveChunks.length;i++){
+			if((fc.ourBitField[i]==false) && (peerChunks[i]==true)){
 				block = i;
 
 				if (block==peer.torrentI.piece_hashes.length-1){ /**LAST PIECE*/
@@ -102,11 +103,22 @@ public class Download implements Runnable {
 
 				System.out.println("index, begin, block: "+index+","+begin+","+block);
 				requestPiece(index,begin,block);
-				if(haveChunks[i]==false){
+				if(boolhaveChunks[i]==false){
 					i--; //rerequest same block!!!
+				}else{
+					boolhaveChunks[i]=true;
 				}
 			}
 		}
+		for (int z = 0; z<FileChunks.ourBitField.length;z++){
+			FileChunks.ourBitField[z]=boolhaveChunks[z];
+			//updates the filechunks bitfield based on our temporary bitfield since download is done
+		}
+		for (int f = 0; f< this.chunks.size();f++){
+			FileChunks.chunks.add(f, this.chunks.get(f)); 
+			//adds the currently downloaded chunks to the file chunks since download is done.
+		}
+		
 		System.out.println("Finished downloading chunks.");
 		fc.saveToFile();
 		ConnectToTracker.sendMessageToTracker(Event.sendCompletedEvent(), "completed");
@@ -157,7 +169,7 @@ public class Download implements Runnable {
 		if (verify(block,chunk, chunkHash)== 0){
 		}else{
 			/**add the chunk if correct*/
-			FileChunks.ourBitField[block]=true;
+			boolhaveChunks[block]= true;
 			this.chunksHashes[block] = ByteBuffer.wrap(chunkHash);
 			this.chunks.add(chunk); /**add to array*/
 			ConnectToTracker.updateAmounts(chunk.length);
@@ -165,10 +177,7 @@ public class Download implements Runnable {
 			have = new Message(5,(byte)4);
 			have.setPayload(index, begin, block);
 			writeHavetoAllPeers(have);
-
 		}
-
-
 	}
 
 	private int verify(int block, byte[] chunk, byte[] chunkHash) {
