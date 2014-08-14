@@ -220,6 +220,9 @@ public class Peer implements Runnable{
 
 		byte[] chunkHash = null;
 		if (verify(currBlock,chunk, chunkHash)== 0){
+			done = true;
+			/**************************************************************************************/
+			/**ISSUES HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 		}else{
 			/**add the chunk if correct*/
 			boolhaveChunks[currBlock]= true;
@@ -408,6 +411,7 @@ public class Peer implements Runnable{
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
 			if (read==5){
 				is.readFully(bitField); /**get rid of bit field*/
+				System.out.println("bitfield length: "+bitField.length);
 				byte[] ba = new byte[(ConnectToTracker.torrentI.piece_hashes.length + 7) / 8];
 
 				if(ba.length != bitField.length){/**the number of chunks = the length of the bitField!!*/
@@ -495,7 +499,7 @@ public class Peer implements Runnable{
 	 */
 	public void gotChoked() throws SocketException{
 		isChoked = true;
-		socket.setSoTimeout(120000); /**time out for 1 minute to get unchoked else destroy connection*/
+		socket.setSoTimeout(5000000); /**time out for 1 minute to get unchoked else destroy connection*/
 		do{
 			try {
 				if (readMsg()==1){
@@ -577,7 +581,7 @@ public class Peer implements Runnable{
 
 		while(!stopThread) {
 			try {
-				if(!done) {
+				if((!done) && (!isChoked)) {
 					requestPiece();
 					if(readMsg() != 7) {
 						Thread.sleep(30000);
