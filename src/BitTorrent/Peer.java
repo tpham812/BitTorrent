@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -16,12 +18,23 @@ public class Peer implements Runnable{
 	public int port;
 	public byte[] id;
 	public String ip;
+	int currIndex;
+	int currBegin;
+	int currBlock;
+	boolean done;
 	public DataOutputStream os;
 	public DataInputStream is;
 	public byte[] ourID;
 	public byte[] bitField;
 	public boolean[] boolBitField;
 	public TorrentInfo torrentI;
+	/**Array of chunks to be stored*/
+    private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+    /**Used to avoid duplicate chunks by storing in this array*/
+    private ByteBuffer[] chunksHashes; 
+    boolean[] boolhaveChunks;
+    boolean[] peerChunks;
+
 	/**Socket connection to the peer*/
 	public Socket socket;
 	protected final byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
@@ -35,6 +48,12 @@ public class Peer implements Runnable{
 		this.id = id;
 		this.torrentI = ConnectToTracker.torrentI;
 		this.stopThread = false;
+		this.boolhaveChunks= new boolean[FileChunks.ourBitField.length];
+		for (int i = 0; i<boolhaveChunks.length;i++){
+			boolhaveChunks[i] = FileChunks.ourBitField[i];
+		}
+		this.peerChunks = boolBitField;
+		done=false;
 	}
 
 	/**
@@ -42,7 +61,7 @@ public class Peer implements Runnable{
 	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
 	 */
 	public void upload(int length, int index, int begin) throws IOException{
-		
+
 		Message pieceMsg;
 		byte[] block;
 		long startTime;
@@ -52,31 +71,229 @@ public class Peer implements Runnable{
 		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); //Is this correct?! 
 		int lastPieceIndex = fileLength - 1;
 
-			if(FileChunks.ourBitField[index] == true){
-				block = new byte[length];
-				System.arraycopy((FileChunks.booleanToByteBitField(FileChunks.ourBitField))[index], begin, block, 0, length);
-				pieceMsg = new Message(9 + length, (byte) 7);
-				pieceMsg.setPayload(index, begin, length);
-				startTime = System.nanoTime();
-				os.write(pieceMsg.message);
+		if(FileChunks.ourBitField[index] == true){
+			block = new byte[length];
+			System.arraycopy((FileChunks.booleanToByteBitField(FileChunks.ourBitField))[index], begin, block, 0, length);
+			pieceMsg = new Message(9 + length, (byte) 7);
+			pieceMsg.setPayload(index, begin, length, null);
+			startTime = System.nanoTime();
+			os.write(pieceMsg.message);
+			os.flush();
+
+			int msg2 = readMsg();
+			if(msg2 == Message.MSG_HAVE){
+				endTime = System.nanoTime();					
+				if(index == lastPieceIndex){
+					throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
+				else {
+					throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
+				}
+			}else{
+				System.out.println("No Have message received after upload.");
+				//need to end timer					
+			}
+		}
+	}
+
+	public void requestPiece() throws IOException, InterruptedException {
+
+		/**keeps track of bytes*/
+		int begin = 0;
+		/**Keeps track of current block number*/
+		int block = 0;
+		int index = torrentI.piece_length; /**Length of piece*/
+
+		int read;
+
+		System.out.println("Reading message from peer.");
+		read = readMsg();
+		System.out.println("Finished reading message from peer.");
+		if (read==1){
+			System.out.println("Unchoked. Downloading chunks.");
+		}else if (read==-2){
+			/**choked and timed out so destory connection*/
+			closeConnection(); 
+			return;
+		}
+
+		this.chunksHashes= new ByteBuffer[torrentI.piece_hashes.length];
+
+		System.out.println("downloading chunks.");
+		/**Message to  for what block to send.*/
+		Message askForPieces;
+		ConnectToTracker.sendMessageToTracker(Event.sendStartedEvent(), "started");
+		for(int i = 0; i<this.boolhaveChunks.length;i++){
+			if((FileChunks.ourBitField[i]==false) && (peerChunks[i]==true)){
+				block = i;
+
+				if (block==torrentI.piece_hashes.length-1){ /**LAST PIECE*/
+					int left = torrentI.piece_hashes.length-1;
+					int lastSize = torrentI.file_length - (left*torrentI.piece_length);/**cuz last pieces might be irregurarly sized*/
+					if (lastSize<index){
+						index = lastSize;
+					}else{
+						index = torrentI.piece_length;
+					}
+				}
+				begin = ConnectToTracker.torrentI.piece_length*block;
+
+				System.out.println("index, begin, block: "+index+","+begin+","+block);
+				askForPieces = new Message(13,(byte)6); 
+				askForPieces.setPayload(index,begin,block, null); /**ask for piece*/
+				os.write(askForPieces.message);
+				os.flush();
+				this.currIndex = index;
+				this.currBegin = begin;
+				this.currBlock = block;
+
+				askForPieces = new Message(13,(byte)6); 
+				askForPieces.setPayload(index,begin,block, null); /**ask for piece*/
+				os.write(askForPieces.message);
 				os.flush();
 
-				int msg2 = readMsg();
-				if(msg2 == Message.MSG_HAVE){
-					endTime = System.nanoTime();					
-					if(index == lastPieceIndex){
-						throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
-					else {
-						throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
-					}
+				if(boolhaveChunks[i]==false){
+					i--; //rerequest same block!!!
 				}else{
-					System.out.println("No Have message received after upload.");
-					//need to end timer					
+					boolhaveChunks[i]=true;
 				}
+
+				for (int z = 0; z<FileChunks.ourBitField.length;z++){
+					FileChunks.ourBitField[z]=boolhaveChunks[z];
+					//updates the filechunks bitfield based on our temporary bitfield since download is done
+				}
+				for (int f = 0; f< this.chunks.size();f++){
+					FileChunks.chunks.add(f, this.chunks.get(f)); 
+					//adds the currently downloaded chunks to the file chunks since download is done.
+				}
+				break; //only want to do this once in order to read in the piece!!!
 			}
+		}
+		this.done = true;
+
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		/*    System.out.println("Finished downloading chunks.");
+	        FileChunks.saveToFile();
+	        ConnectToTracker.sendMessageToTracker(Event.sendCompletedEvent(), "completed");
+	        closeConnection();*/
+		return;
 	}
-	
-	public boolean openConnection(){
+	/***
+	 * Requests the piece
+	 * @param index integer specifying the requested length
+	 * @param begin integer specifying the zero-based byte offset within the piece 
+	 * @param block integer specifying the zero-based piece index
+	 * @throws IOException 
+	 */
+	private void downloadPiece() throws IOException {
+		/**Message to peer telling it that we have received the piece*/
+		Message have;
+		/**Current chunk being downloaded*/
+		byte[] chunk;
+
+		//index and begin
+		int index = is.readInt();
+		int tempBegin = is.readInt();
+
+		if ((index!=this.currBlock)||(tempBegin!=this.currBegin)){
+			System.out.println("Error: upload send a differnt piece than was requested.");
+			return;
+		}
+		chunk = new byte[this.currIndex];
+
+		for (int m = 0 ; m<index;m++){
+			chunk[m]=is.readByte(); 
+		}/**read in chunk*/
+
+		byte[] chunkHash = null;
+		if (verify(currBlock,chunk, chunkHash)== 0){
+		}else{
+			/**add the chunk if correct*/
+			boolhaveChunks[currBlock]= true;
+			this.chunksHashes[currBlock] = ByteBuffer.wrap(chunkHash);
+			this.chunks.add(chunk); /**add to array*/
+			ConnectToTracker.updateAmounts(chunk.length);
+			ConnectToTracker.sendMessageToTracker(null, null);
+			have = new Message(5,(byte)4);
+			have.setPayload(index, currBegin, currBlock, null);
+			writeHavetoAllPeers(have);
+		}
+	}
+
+	private int verify(int block, byte[] chunk, byte[] chunkHash) {
+		int verify = 1; 
+		byte[] trackerHash = torrentI.piece_hashes[block].array();
+		MessageDigest digest = null;
+		try {
+			digest = MessageDigest.getInstance("SHA-1");
+		} catch (Exception e) {
+			System.out.println("Error: Could not SHA-1");
+			closeConnection();
+			return -1;
+		}
+		digest.update(chunk);
+		chunkHash = digest.digest();
+
+		/**verify that the sha-1 hashes match with what is in the .torrent file*/
+		if (trackerHash.length!=chunkHash.length){
+			System.out.println("Error: SHA-1 lengths are not same!");
+			verify = 0;
+		}
+		for (int d = 0; d<chunkHash.length;d++){
+			if (chunkHash[d]!=trackerHash[d]){
+				System.out.println("Error: Hashes are not same!");
+				verify = 0;
+				break;
+			}
+		}
+		if (alreadyInArray(chunkHash) == true){
+			System.out.println("The chunk given is a duplicate chunk. Program will request chunk from Peer again.");
+			verify = 0;
+		}
+		return verify;
+	}
+
+	/**sends have message to all peers when we have a chunk stored!*/
+	private void writeHavetoAllPeers(Message have) {
+
+		for (int i = 0; i<PeerConnectionsInfo.subsetDPeers.size();i++){
+			try {
+				PeerConnectionsInfo.subsetDPeers.get(i).os.write(have.message);
+				PeerConnectionsInfo.subsetDPeers.get(i).os.flush();
+			} catch (IOException e) {
+				System.out.println("Error: Cannot send have message to peer");
+			}
+		}
+	}
+
+	/**
+	 * Makes sure the chunk given is not already present in the Hashes array 
+	 * This helps avoid duplicate chunks.
+	 * */
+	private boolean alreadyInArray(byte[] chunkHash) {
+		for (int i = 0; i<chunksHashes.length; i++){
+			if ((chunksHashes[i]!=null)&&(areEqual(chunksHashes[i].array(), chunkHash)==true)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Checks if the byte arrays are equal and returns true if they are.
+	 * */
+	private boolean areEqual(byte[] array, byte[] chunkHash) {
+		if (array.length!=chunkHash.length){
+			return false;
+		}
+		for (int j = 0; j<chunkHash.length; j++){
+			if (array[j]!=chunkHash[j]){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean openConnection() throws IOException{
 
 		boolean peerInfoGood = true;
 		/**Construct message to send to peer*/
@@ -149,6 +366,13 @@ public class Peer implements Runnable{
 			closeConnection();
 			return false;
 		}
+		
+		Message bitfieldMsg = new Message(1, (byte) 5);
+		bitfieldMsg.setPayload(-1, -1, -1, FileChunks.booleanToByteBitField(FileChunks.ourBitField));
+		System.out.println("Sending bitfield message to peer.");
+		os.write(bitfieldMsg.message);
+		os.flush();/**push message to stream*/
+		
 		System.out.println("finished handshake.");
 		return true;
 	}
@@ -207,33 +431,31 @@ public class Peer implements Runnable{
 			isChoked=false;
 			return id;
 		case 2: //intereseted / go to upload peer for choke or unchoke 
-
+			Determinechoke();
 			return id;
-
 		case 3: //not interested = destroy connection via upload peer. 
 			stopThread = true;
 			closeConnection();
 			return id;
-
 		case 4: //have = do nothing
 			return id;
 		case 5: //bitfield = do nothing
 			//upload peer desides to choke or unchoke
+			getBitField();
 			return id;
 		case 6: //request = //go to upload peer's upload piece
 			index = is.readInt();
 			begin = is.readInt();
 			length = is.readInt();
 			upload(length, index, begin);
-
 			return id;
 		case 7: //piece // go to download peer's download piece
-			index = is.readInt();
-			begin = is.readInt();
+			downloadPiece();
 			return id;
 		default: return id;
 		}	
 	}
+
 
 	/**
 	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
@@ -323,6 +545,12 @@ public class Peer implements Runnable{
 
 		while(!stopThread) {
 			try {
+				if(!done) {
+					requestPiece();
+					if(readMsg() != 7) {
+						Thread.sleep(30000);
+					}
+				}
 				readMsg();
 			} catch (Exception e) {
 				e.printStackTrace();

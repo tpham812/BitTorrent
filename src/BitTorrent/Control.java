@@ -92,15 +92,7 @@ public class Control {
 		return true;
 	}
 
-	/**
-	 * @param peer
-	 * @throws IOException
-	 * This method accesses the list of unchoked peer connections in order 
-	 * to determine whether we can connect to upload to more peers. 
-	 * It also checks if the peer has a bitfield or have
-	 * message as well as calls randomUnchoke() in order to implement
-	 * the optimistic unchoke function. 
-	 */
+	
 
 
 	

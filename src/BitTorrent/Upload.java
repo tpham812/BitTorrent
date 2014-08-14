@@ -68,7 +68,7 @@ public class Upload implements Runnable{
 			peer.os.write(unchokeMsg.message);
 			peer.os.flush();/**push message to stream*/
 			System.out.println("Finished unchoke writing message to peer.");
-			upload();
+
 
 		}else{
 			//choke msg 

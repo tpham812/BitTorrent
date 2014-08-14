@@ -9,9 +9,9 @@ import java.util.ArrayList;
 public class FileChunks {
 
 	/**Final file that is output*/
-	private FileOutputStream fileoutput;
+	private static FileOutputStream fileoutput;
 	/**Final name of the output file as given as the second argument to the program*/
-	private String fileOutArg;
+	private static String fileOutArg;
 	/**Array of chunks to be stored*/
 	public static ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Boolean version of our bitfield which will be the most up to date by the download peer*/
@@ -44,7 +44,6 @@ public class FileChunks {
 					System.out.println("Sum: "+ sum);
 					sum = 0;
 					count = 1;
-
 				}
 			}
 		}
@@ -54,10 +53,10 @@ public class FileChunks {
 	/**
 	 * Saves the chunks downloaded to the output file specified by the user's argument.
 	 * */
-	public void saveToFile() throws IOException {
+	public static void saveToFile() throws IOException {
 		System.out.println("Writing to File.");
 		try {
-			fileoutput = new FileOutputStream(new File(this.fileOutArg));
+			fileoutput = new FileOutputStream(new File(fileOutArg));
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: could not open file to save data to.");
 		}
