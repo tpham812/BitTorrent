@@ -6,7 +6,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 
-
+/**
+ * This class holds chunk information and can save chunks to file when download has completed
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
+ *
+ */
 public class FileChunks {
 
 
@@ -20,8 +24,8 @@ public class FileChunks {
 	
 	/**
 	 * COnverts the boolean bit field to a byte array for upload peer.
-	 * */
-	
+	 * @return returns byte array representation of the boolean array
+	 **/
 	public static byte[] booleanToByteBitField(boolean [] bf){
 		BitSet bits = new BitSet(bf.length);
 		
@@ -30,29 +34,11 @@ public class FileChunks {
 		for (int i = 0; i<bf.length; i++){
 			bits.clear(i); //makes the bitset to 0
 		}
-	//	int count = 0;
-	//	int sum=0;
 		for (int i=0; i<bits.length(); i++) {
 	        if (bits.get(i)) {
 	            ba[ba.length-i/8-1] |= 1<<(i%8);
 	        }
 	    }
-		
-		/*for (int i = 0; i<bf.length; i++){ //bf.length = bitfield*8
-			//byte[] bits = new byte[]({byte) (bf[i]?1:0));
-			count++;
-			if(bf[i] == true){
-				System.out.println("Sum: "+ sum);
-				sum= sum + (int)Math.pow(2,7-(i%8));
-				System.out.println("Sum2: "+ sum);
-				if(count == 8) {
-					ba[i/8] = (byte)sum;
-					System.out.println("Sum: "+ sum);
-					sum = 0;
-					count = 1;
-				}
-			}
-		}*/
 		return ba;
 	}
 	
@@ -73,7 +59,5 @@ public class FileChunks {
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: could not open file to save data to.");
 		}
-		
-	
 	}
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 /**
  * Data Structure to help determine the rarest piece first algorithm.
- * @author Amulya Uppala
+ * @author Amulya Uppala Truong Pham
  * */
 public class bitFieldDS {
 	int sum;

@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Controls the flow of the main componenets
- * @author Amulya Uppala
- * */
+ * Controls the flow of the main components
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
+ **/
+
 public class Control {
+	
 	boolean gotEntireBitField = false;
+	
 	/**
 	 * Finds the perfect subset of peers to get the entire file with the rarest first prefered.
 	 */
@@ -22,7 +25,9 @@ public class Control {
 	}
 
 
-	/**makes a list of subset of peers with bitfields adding up to the entire file with rarest peers first*/
+	/**
+	 * makes a list of subset of peers with bitfields adding up to the entire file with rarest peers first
+	 **/
 	private void findList() {
 		List<Peer> subset= PeerConnectionsInfo.subsetDPeers;
 		int numChunks = ConnectToTracker.torrentI.piece_hashes.length;
@@ -75,7 +80,12 @@ public class Control {
 		}
 
 	}
-	/**Checks if the person is already in the bitfield list of peers.*/
+	/**
+	 * Check if the peer is already in the bitfield list of peers
+	 * @param subset list of peers to add to list
+	 * @param bfDS bitfield list of peers
+	 * @return true if it contains in subset list, false if not
+	 */
 	private boolean inSubset(List<Peer> subset, bitFieldDS bfDS) {
 		for (int i = 0 ; i< bfDS.lp.size(); i++){
 			if (subset.contains(bfDS.lp.get(i))){
@@ -86,7 +96,11 @@ public class Control {
 	}
 
 
-	/**sees if bitfield is not full or not. if bitfield is not full then we need more chunks*/
+	/**
+	 * Sees if bitfield is not full or not. if bitfield is not full then we need more chunks
+	 * @param bf boolean array to store bitfield in
+	 * return true if bit field
+	 **/
 	private boolean fullBitField(boolean[] bf){ 
 		for (int i = 0; i< bf.length;i++){
 			if ((FileChunks.ourBitField[i]==false) && (bf[i]==false)){
@@ -95,11 +109,6 @@ public class Control {
 		}
 		return true;
 	}
-
-	
-
-
-	
 
 	/** This method implements the optimistic unchoke functionality.
 	 *  When the 30 second timer is up, it chooses the unchoked peer
@@ -114,11 +123,10 @@ public class Control {
 		double currTP = 0.0;
 		double leastTP = 999999999999999999999.0; //some very big number
 
-		//IF timer is up, PLACE THIS HERE!!!!!
 
 
 		for (int i = 0; i < PeerConnectionsInfo.unchokedPeers.size(); i++){
-			//compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer);
+			/** compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer); */
 			currTP = PeerConnectionsInfo.unchokedPeers.get(i).throughput;
 			if(currTP < leastTP || currTP == leastTP){
 				leastTP = currTP;
@@ -130,7 +138,7 @@ public class Control {
 		PeerConnectionsInfo.chokedPeers.add(chokedPeer);
 
 
-		//randomly select a peer from PeerConnectionInfo.chokedPeers
+		/** randomly select a peer from PeerConnectionInfo.chokedPeers */
 		Random r = new Random();
 		optimisticUnchoke = PeerConnectionsInfo.chokedPeers.get(r.nextInt(PeerConnectionsInfo.chokedPeers.size()));
 		PeerConnectionsInfo.unchokedPeers.add(optimisticUnchoke);
@@ -138,9 +146,9 @@ public class Control {
 	}
 
 	/**
-	 * FOr every peer in the list of peers we want to connect to, send an interested message
+	 * For every peer in the list of peers we want to connect to, send an interested message
 	 * stop the keep alive messages and start the thread. 
-	 * */
+	 **/
 	public void makeThreads() {
 		Peer temp;
 		Thread thread;
@@ -166,14 +174,11 @@ public class Control {
 		String peerID ="", peerIP = "";
 		int peerPort = 0;
 		boolean found = false;
-		//System.out.println(list.size());
 		for(int i = 0; i < list.size(); i++){
 			peer_Map = (HashMap)list.get(i);
 			peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
 			peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
 			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);
-		
-			//System.out.println(peerIP);
 			if((peerIP.equalsIgnoreCase("128.6.171.131")) || (peerIP.equalsIgnoreCase("128.6.171.130")) ) {
 
 				found = true;
@@ -196,8 +201,9 @@ public class Control {
 		return found;
 	}
 	/**
-	 * gets the minimum time interval to update tracker at.
-	 * */
+	 * Gets the minimum time interval to update tracker at.
+	 * @param reponse the reponse of the tracker
+	 **/
 	public int getTrackerInterval(HashMap response) {
 
 		int trackInterval;

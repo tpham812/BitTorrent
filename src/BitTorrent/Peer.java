@@ -9,33 +9,54 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 
+/**
+ * This class creates a peer thread for peers we are connected to for upload an download.
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
+ *
+ */
 public class Peer implements Runnable{ 
 
-	private boolean stopThread; //controls if the thread is halted or not
-	boolean isChoked; //we are choked so we cannot continue
-	public double throughput; //
-	public int port; //port number of the peer
-	public byte[] id; //id of the peer
-	public String ip; //ip address of the peer
-	int currIndex; //current index of the piece we are downloading
-	int currBegin; //beginning byte index of the piece we are donwloading
-	int currBlock; //block we are downloading
-	boolean done; //boolean to determine if we are done with downloading all pieces
-	public DataOutputStream os; //output stream to write to the peer
-	public DataInputStream is; //input stream coming to us
-	public byte[] ourID; //our byte id
-	public byte[] bitField; //the bitfield of the peer
-	public boolean[] boolBitField; //boolean array of the chunks the peer has
-	public TorrentInfo torrentI; //torrentI file corresponding to the file
+	/** Boolean to stop thread */
+	private boolean stopThread; 
+	/** Boolean to see if peer choked us or not */
+	boolean isChoked;
+	/** Value of throughput of the peer */
+	public double throughput; 
+	/** Peer port number */
+	public int port; 
+	/** Peer ID */
+	public byte[] id; 
+	/** Peer IP */
+	public String ip; 
+	/** current index of the piece we are downloading */
+	int currIndex; 
+	/** beginning byte index of the piece we are downloading */
+	int currBegin; 
+	/** block we are downloading */
+	int currBlock; 
+	/** boolean to determine if we are done with downloading all pieces */
+	boolean done; 
+	/** output stream to write to the peer */
+	public DataOutputStream os; 
+	/** input stream coming to us */
+	public DataInputStream is; 
+	/** Our generated ID */
+	public byte[] ourID; 
+	/** Bitfield of the peer */
+	public byte[] bitField; 
+	/** Boolean array of the chunks the peer has */
+	public boolean[] boolBitField; 
+	/** TorrentI file corresponding to the file */
+	public TorrentInfo torrentI; 
 	/**Array of chunks to be stored*/ 
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-	/**Used to avoid duplicate chunks by storing in this array*/
+	/** Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
-	boolean[] boolhaveChunks; //chunks we have acquired already but keep temp so we can modify 
-	boolean[] peerChunks; //chunks the peer has but we keep temporarily so we can modify
-
+	/** Chunks we have acquired already but keep temporary so we can modify */
+	boolean[] boolhaveChunks; 		
+	/** Chunks the peer has but we keep temporarily so we can modify */
+	boolean[] peerChunks; 				
 	/**Socket connection to the peer*/
 	public Socket socket;
 	protected final byte[] BitProtocol = new byte[]{'B','i','t','T','o','r','r','e','n','t',' ','P','r','o','t','o','c','o','l'};
@@ -43,7 +64,13 @@ public class Peer implements Runnable{
 	protected final byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 
-
+	/**
+	 * Constructor
+	 * @param ip ip address of peer
+	 * @param id id of peer
+	 * @param port port number of peer
+	 * @throws IOException
+	 */
 	public Peer(String ip, byte[] id, int port) throws IOException {
 		this.port = port;
 		this.ip = ip;
@@ -63,7 +90,7 @@ public class Peer implements Runnable{
 
 	/**
 	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
-	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
+	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id.
 	 */
 	public void upload(int length, int index, int begin) throws IOException{
 
@@ -101,7 +128,7 @@ public class Peer implements Runnable{
 	}
 	/**
 	 * Request the piece from the peer by looping through the array of 
-	 * things we don't have and the things they have. then we can create the message and send it to them
+	 * things we don't have and the things they have. then we can create the message and send it to them.
 	 * */
 	public void requestPiece() throws IOException, InterruptedException {
 		System.out.println("Requesting Pieces!!!");
@@ -114,12 +141,12 @@ public class Peer implements Runnable{
 		int read;
 
 		System.out.println("Reading message from peer.");
-		read = readMsg(); //check if we get chocked or unchoked.  
+		read = readMsg();  /** Check if we get chocked or unchoked */  
 		System.out.println("Finished reading message from peer.");
 		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
 		}else if (read==-2){
-			/**choked and timed out so destory connection*/
+			/** Choked and timed out so destroy connection*/
 			closeConnection(); 
 			return;
 		}
@@ -167,27 +194,21 @@ public class Peer implements Runnable{
 
 				for (int z = 0; z<FileChunks.ourBitField.length;z++){
 					FileChunks.ourBitField[z]=boolhaveChunks[z];
-					//updates the filechunks bitfield based on our temporary bitfield since download is done
+					/** Updates the filechunks bitfield based on our temporary bitfield since download is done */
 				}
 				for (int f = 0; f< this.chunks.size();f++){
 					FileChunks.chunks.add(f, this.chunks.get(f)); 
-					//adds the currently downloaded chunks to the file chunks since download is done.
+					/** Adds the currently downloaded chunks to the file chunks since download is done. */
 				}
-				break; //only want to do this once in order to read in the piece!!!
+				break; 
 			}
 		}
 		this.done = true;
-
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		/*    System.out.println("Finished downloading chunks.");
-	        FileChunks.saveToFile();
-	        ConnectToTracker.sendMessageToTracker(Event.sendCompletedEvent(), "completed");
-	        closeConnection();*/
 		return;
 	}
 	/**
-	 * sends interested message to send to peer so that we can get unchoked
-	 * */
+	 * Sends interested message to send to peer so that we can get unchoked.
+	 **/
 	public void sendInterested() throws IOException{
 		Message interested = new Message(1,(byte)2); /**create interested message*/
 		System.out.println("Writing message to peer.");
@@ -197,17 +218,16 @@ public class Peer implements Runnable{
 	}
 
 
-	/***
+	/**
 	 * Downloads the piece we have requested
 	 * @throws IOException 
-	 */
+	 **/
 	private void downloadPiece() throws IOException {
 		/**Message to peer telling it that we have received the piece*/
 		Message have;
 		/**Current chunk being downloaded*/
 		byte[] chunk;
 
-		//index and begin
 		int index = is.readInt(); //the index of the piece and the begin byte index of the piece 
 		int tempBegin = is.readInt();
 
@@ -217,7 +237,8 @@ public class Peer implements Runnable{
 		}
 		chunk = new byte[this.currIndex];
 
-		for (int m = 0 ; m<index;m++){ //chunk being read in
+		/** Chunk being read in */
+		for (int m = 0 ; m<index;m++){ 
 			chunk[m]=is.readByte(); 
 		}/**read in chunk*/
 
@@ -391,7 +412,7 @@ public class Peer implements Runnable{
 			closeConnection();
 			return false;
 		}
-		//Send our bitfield as message to this peer.
+		/** Send our bitfield as message to this peer. */
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		byte[] temp = new byte[FileChunks.booleanToByteBitField(FileChunks.ourBitField).length];
 		for (int as = 0 ; as< temp.length; as++){
@@ -406,15 +427,15 @@ public class Peer implements Runnable{
 		return true;
 	}
 
-	/** Get bitfield from peer */
-	/** If wrong bit field size make bitfield null 
-	 * @throws IOException */
+	/** Get bitfield from peer. 
+	 *	If wrong bit field size make bitfield null
+	 *	@param read message ID 
+	 * 	@throws IOException 
+	 **/
 	public void getBitField(byte read) throws IOException {
 		System.out.println("Reading message from peer.");
-		//System.out.println(read);
 		System.out.println("Finished reading message from peer.");
 		bitField = new byte[is.available()];
-		//System.out.println("Len of bitfield "+ bitField.length);
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
 			if (read==5){
 				is.readFully(bitField); /**get rid of bit field*/
@@ -426,13 +447,13 @@ public class Peer implements Runnable{
 					this.boolBitField=null;
 					return;
 				}
-			}else{ //if we get a have message then we canont do anything => bitfield is null
+			}else{ 
 				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
 				this.boolBitField=null;
 				return;
 			}
 		}
-		//copy the array into the intial stuff we have for calculating the peer bitfields and ours.
+		/** copy the array into the intial stuff we have for calculating the peer bitfields and ours. */
 		boolean[] tempBool = toBooleanArray(bitField);
 		this.boolBitField = new boolean[tempBool.length];
 		for (int i = 0; i<tempBool.length; i++){
@@ -448,6 +469,7 @@ public class Peer implements Runnable{
 	/**
 	 * Read in message from peer which are formatted based on message type.
 	 * We need id of the message to identify what type of message was sent. 
+	 * Handles messages by calling methods based on message 
 	 * @return message byte as int is returned 
 	 * @throws IOException
 	 */
@@ -462,39 +484,38 @@ public class Peer implements Runnable{
 		byte id = is.readByte();
 
 		/**keep-alive*/
-		if(msgLength == 0){ //do nothing!!!!  but keep this here!
+		if(msgLength == 0){ 
 			return -1;
 		}
 		switch(id){
-		case 0://choked = download peer handles gotChocked
+		case 0:		/** Choked */
 			System.out.println("Choked on ip: "+ip+" on port: "+port);
 			gotChoked(); 
 			if (isChoked==true){
 				return -2;
 			}
-		case 1://unchoked  = then we can request a piece if we unchoke
+		case 1:		/** Unchoked */
 			isChoked=false;
 			return id;
-		case 2: //intereseted / go to upload peer for choke or unchoke 
+		case 2: 	/** Interested */
 			Determinechoke();
 			return id;
-		case 3: //not interested = destroy connection via upload peer. 
+		case 3: 	/** Not Interested */
 			stopThread = true;
 			closeConnection();
 			return id;
-		case 4: //have = do nothing
+		case 4: 	/** Have */
 			return id;
-		case 5: //bitfield = do nothing
-			//upload peer desides to choke or unchoke
+		case 5:		/** Bit Field */
 			getBitField(id);
 			return id;
-		case 6: //request = //go to upload peer's upload piece
+		case 6: 	/** Request */
 			index = is.readInt();
 			begin = is.readInt();
 			length = is.readInt();
 			upload(length, index, begin);
 			return id;
-		case 7: //piece // go to download peer's download piece
+		case 7:  	/** Piece */
 			downloadPiece();
 			return id;
 		default: return id;
@@ -525,11 +546,13 @@ public class Peer implements Runnable{
 
 	/** 
 	 * Converts bitfield byte array to boolean array 
-	 * */
+	 * @param B bitfield array to convert to boolean array
+	 * @return boolean array
+	 **/
 	public static boolean[] toBooleanArray(byte[] B) {
 		boolean[] bool = new boolean[B.length*8];
 
-		for(int i = 0; i<B.length*8; i++){ //turn bitfield into boolean array 
+		for(int i = 0; i<B.length*8; i++){ 
 			if ((B[i/8] & (1<<(7-(i%8)))) > 0){
 				bool[i] = true; /**if the shifting of the bit creates a whole multiple of 2 => true*/
 			}
@@ -537,23 +560,26 @@ public class Peer implements Runnable{
 		return bool;
 	}
 
+	/**
+	 * Determine which if peer is to be choked or unchoked.
+	 * @return returns true if peer is unchoked, or returns true if peer is choked
+	 * @throws IOException
+	 */
 	public boolean Determinechoke() throws IOException{
 
-		//read message from peer to see if they are interested.
-
 		System.out.println("Peer is interested.");
-		//If we have less than 3 downloading peers, let this peer connect.			
+		/** If we have less than 3 downloading peers, let this peer connect. */		
 		if(PeerConnectionsInfo.unchokedPeers.size() < 3){
 			PeerConnectionsInfo.unchokedPeers.add(this);
 			System.out.println("Peer is unchoked.");
 			return true;
-			//If we are already connected to six people who are uploading from us, keep peer choked.
+			/** If we are already connected to six people who are uploading from us, keep peer choked. */
 		} else if (PeerConnectionsInfo.uploadConnections > 6){
 			PeerConnectionsInfo.chokedPeers.add(this);
 			System.out.println("Peer is choked.");
 			Control.randomUnchoke();
 			return false;
-			//read message to see if they are have messages.
+			/** Read message to see if they are have messages. */
 		} else {
 			/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 			Control.randomUnchoke();
@@ -569,9 +595,10 @@ public class Peer implements Runnable{
 			}
 		}
 	}
+	
 	/**
 	 * closes the socket and streams.
-	 * */
+	 **/
 	public void closeConnection() {
 
 		System.out.println("Closing socket and data streams.");
