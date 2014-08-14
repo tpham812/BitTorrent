@@ -86,64 +86,7 @@ public class Upload implements Runnable{
 	 * reads in have messages and does nothing
 	 * @throws IOException 
 	 * */
-	public void upload() throws IOException{
-		Message pieceMsg;
-		byte[] block;
-		int index, begin, length;
-		long startTime;
-		long endTime;
-		int fileLength = ConnectToTracker.torrentI.piece_hashes.length;
-		int pieceLength = ConnectToTracker.torrentI.piece_length;
-		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); //Is this correct?! 
-		int lastPieceIndex = fileLength - 1;
-		
-		while(true){
-			int msg = peer.readMessage();
-			if(msg == Message.MSG_REQUEST){
-
-				index = peer.is.readInt();
-				begin = peer.is.readInt();
-				length = peer.is.readInt();
-
-				if(FileChunks.ourBitField[index] == true){
-					block = new byte[length];
-					System.arraycopy((FileChunks.booleanToByteBitField(fc.ourBitField))[index], begin, block, 0, length);
-					pieceMsg = new Message(9 + length, (byte) 7);
-					pieceMsg.setPayload(index, begin, length);
-					startTime = System.nanoTime();
-					peer.os.write(pieceMsg.message);
-					peer.os.flush();
-
-					int msg2 = peer.readMessage();
-					if(msg2 == Message.MSG_HAVE){
-						endTime = System.nanoTime();					
-						if(index == lastPieceIndex){
-							peer.throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
-						else {
-							peer.throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
-						}
-					}else{
-						System.out.println("No Have message received.");
-						//need to end timer					
-					}
-
-				}else {
-					System.out.println("I don't have this piece " + index);
-				}
-			}else if (msg == Message.MSG_HAVE){
-					try {
-						// read the next request
-						msg = peer.readMessage(); 
-					} catch (Exception e) {
-						// no following messages
-						return;
-					}
-
-			}else {
-					// other messages received
-				}
-		}
-	}
+	
 
 	public void isStopped() throws IOException{
 		//threads? msg from tracker?

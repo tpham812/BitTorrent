@@ -41,6 +41,41 @@ public class Peer implements Runnable{
 	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
 	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
 	 */
+	public void upload(int length, int index, int begin) throws IOException{
+		
+		Message pieceMsg;
+		byte[] block;
+		long startTime;
+		long endTime;
+		int fileLength = ConnectToTracker.torrentI.piece_hashes.length;
+		int pieceLength = ConnectToTracker.torrentI.piece_length;
+		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); //Is this correct?! 
+		int lastPieceIndex = fileLength - 1;
+
+			if(FileChunks.ourBitField[index] == true){
+				block = new byte[length];
+				System.arraycopy((FileChunks.booleanToByteBitField(FileChunks.ourBitField))[index], begin, block, 0, length);
+				pieceMsg = new Message(9 + length, (byte) 7);
+				pieceMsg.setPayload(index, begin, length);
+				startTime = System.nanoTime();
+				os.write(pieceMsg.message);
+				os.flush();
+
+				int msg2 = readMsg();
+				if(msg2 == Message.MSG_HAVE){
+					endTime = System.nanoTime();					
+					if(index == lastPieceIndex){
+						throughput = (double)lastPieceLength / ((endTime - startTime)/1000000000.0);						} 
+					else {
+						throughput = (double)pieceLength / ((endTime -startTime)/1000000000.0);						
+					}
+				}else{
+					System.out.println("No Have message received after upload.");
+					//need to end timer					
+				}
+			}
+	}
+	
 	public boolean openConnection(){
 
 		boolean peerInfoGood = true;
@@ -123,7 +158,7 @@ public class Peer implements Runnable{
 	 * @throws IOException */
 	public void getBitField() throws IOException {
 		System.out.println("Reading message from peer.");
-		int read = readMessage();
+		int read = readMsg();
 		System.out.println("Finished reading message from peer.");
 		bitField = new byte[is.available()];
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
@@ -139,9 +174,7 @@ public class Peer implements Runnable{
 				this.boolBitField=null;
 			}
 		}
-
 		this.boolBitField = toBooleanArray(bitField);
-
 	}
 
 
@@ -153,6 +186,7 @@ public class Peer implements Runnable{
 	 */
 	public byte readMsg() throws IOException {
 
+		int length, begin, index;
 		/**Read in message*/
 		int msgLength = is.readInt();
 		/**Read in id*/
@@ -187,11 +221,15 @@ public class Peer implements Runnable{
 			//upload peer desides to choke or unchoke
 			return id;
 		case 6: //request = //go to upload peer's upload piece
-			
+			index = is.readInt();
+			begin = is.readInt();
+			length = is.readInt();
+			upload(length, index, begin);
+
 			return id;
 		case 7: //piece // go to download peer's download piece
-			int index = is.readInt();
-			int begin = is.readInt();
+			index = is.readInt();
+			begin = is.readInt();
 			return id;
 		default: return id;
 		}	
@@ -265,30 +303,30 @@ public class Peer implements Runnable{
 		}
 	}
 
-		public void closeConnection() {
+	public void closeConnection() {
 
-			System.out.println("Closing socket and data streams.");
+		System.out.println("Closing socket and data streams.");
+		try {
+			/**Close socket and streams*/
+			socket.close();
+			is.close();
+			os.close();
+		} catch (Exception e) {
+			System.out.println("Error: Could not close data streams!");
+			return;
+		}	
+	}
+
+
+	@Override
+	public void run() {
+
+		while(!stopThread) {
 			try {
-				/**Close socket and streams*/
-				socket.close();
-				is.close();
-				os.close();
+				readMsg();
 			} catch (Exception e) {
-				System.out.println("Error: Could not close data streams!");
-				return;
-			}	
-		}
-
-
-		@Override
-		public void run() {
-
-			while(!stopThread) {
-				try {
-					readMsg();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				e.printStackTrace();
 			}
 		}
 	}
+}
