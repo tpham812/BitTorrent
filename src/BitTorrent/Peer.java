@@ -48,6 +48,7 @@ public class Peer implements Runnable{
 		this.port = port;
 		this.ip = ip;
 		this.id = id;
+		this.isChoked = true;
 		this.ourID = ConnectToTracker.ourPeerID;
 		this.torrentI = ConnectToTracker.torrentI;
 		this.stopThread = false;
@@ -333,7 +334,7 @@ public class Peer implements Runnable{
 
 			/**Open connection by using a socket*/
 			socket = new Socket(ip,port);
-			System.out.println("Connected.");
+			System.out.println("Connected to Peer: . "+ ip);
 			/**Create input and output stream*/
 			os = new DataOutputStream(socket.getOutputStream());
 			is = new DataInputStream(socket.getInputStream());
@@ -392,7 +393,6 @@ public class Peer implements Runnable{
 		}
 		//Send our bitfield as message to this peer.
 		Message bitfieldMsg = new Message(1, (byte) 5);
-		System.out.println("Piecehash.length"+ConnectToTracker.torrentI.piece_hashes.length);
 		byte[] temp = new byte[FileChunks.booleanToByteBitField(FileChunks.ourBitField).length];
 		for (int as = 0 ; as< temp.length; as++){
 			System.out.println(temp[as]);
@@ -402,7 +402,7 @@ public class Peer implements Runnable{
 		os.write(bitfieldMsg.message);
 		os.flush();/**push message to stream*/
 
-		System.out.println("finished handshake.");
+		System.out.println("finished handshake with Peer: ." + ip);
 		return true;
 	}
 
@@ -454,8 +454,10 @@ public class Peer implements Runnable{
 	public byte readMsg() throws IOException {
 
 		int length, begin, index;
+		byte [] b = new byte[4];
+		is.readFully(b);
 		/**Read in message*/
-		int msgLength = is.readInt();
+		int msgLength = ByteBuffer.wrap(b).getInt();
 		/**Read in id*/
 		byte id = is.readByte();
 
