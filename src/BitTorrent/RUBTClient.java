@@ -106,7 +106,9 @@ public class RUBTClient {
 				}
 			}
 		}while(!found);
-
+		ctrl.startPeers();
+		FileChunks.saveToFile();
+		
 		try {
 
 			ConnectToTracker.sendMessageToTracker(Event.sendStoppedEvent(), "stopped");

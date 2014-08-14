@@ -55,6 +55,9 @@ public class Message {
 		case MSG_KEEP_ALIVE:
 			//empty 
 			break;
+		case MSG_BITFIELD:
+			this.message[4] = (byte)1;
+			break;
 		case MSG_INTERESTED:
 			System.arraycopy(Helper.intToByteArray(lengthPrefix), 0, this.message, 0, 4);
 			this.message[4] = (byte) 2;
@@ -97,7 +100,7 @@ public class Message {
 			System.arraycopy(Helper.intToByteArray(length), 0,message, 5, 4);
 			
 		} else if (id == MSG_PIECE) {
-			System.arraycopy(Helper.intToByteArray(-1), 0, message, 5, 4);
+			System.arraycopy(Helper.intToByteArray(index), 0, message, 5, 4);
 			System.arraycopy(Helper.intToByteArray(begin), 0,message, 9, 4); 
 			System.arraycopy(null, 0, message, 13, lengthPrefix-9);
 			
@@ -106,6 +109,7 @@ public class Message {
 			System.arraycopy(Helper.intToByteArray(begin), 0,message, 9, 4);
 			System.arraycopy(Helper.intToByteArray(index), 0,message, 13, 4);
 		}else if (id == MSG_BITFIELD){
+			System.arraycopy(Helper.intToByteArray(1+bitfield.length),0,message, 0, 4);
 			System.arraycopy(bitfield, 0, message, 5, bitfield.length);
 		}else {
 			System.out.println("Error: Payload requested for wrong message id type. Payload can only be done for have, pieces and request ids only.");

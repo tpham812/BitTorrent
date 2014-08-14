@@ -135,11 +135,14 @@ public class Control {
 
 
 	public void makeThreads(FileChunks fc) {
-		Download temp;
+		Peer temp;
+		Thread thread;
 		for(int i = 0; i< PeerConnectionsInfo.subsetDPeers.size(); i++){
 			try {
-				temp = new Download(PeerConnectionsInfo.subsetDPeers.get(i), fc);
-				temp.run();
+				temp = PeerConnectionsInfo.subsetDPeers.get(i);
+				temp.sendInterested();
+				thread = new Thread(temp);
+				thread.start();
 			} catch (Exception e) {
 				System.out.println("Error: Could not create Thread to run!");
 			} 
@@ -160,11 +163,17 @@ public class Control {
 			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);
 			System.out.println(peerIP);
 			if((peerIP.equalsIgnoreCase("128.6.171.131")) || (peerIP.equalsIgnoreCase("128.6.171.130")) ) {
-				
+
 				found = true;
 				Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 				if(temp.openConnection()){
-					temp.getBitField();
+					System.out.println("IP: "+ peerIP+ "port: "+ peerPort);
+					int len = temp.is.readInt();
+					byte read = temp.is.readByte();
+					temp.getBitField(read); 
+					if(temp.boolBitField.length==0){
+						System.out.println("OH NO!! SIZE 0");
+					}
 					if(temp.boolBitField!=null){
 						PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
 						PeerConnectionsInfo.downloadPeers.add(temp);

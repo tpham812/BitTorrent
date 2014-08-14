@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.BitSet;
 
 
 public class FileChunks {
@@ -20,19 +21,30 @@ public class FileChunks {
 	/**
 	 * COnverts the boolean bit field to a byte array for upload peer.
 	 * */
+	
 	public static byte[] booleanToByteBitField(boolean [] bf){
-		byte[] ba= new byte[bf.length/8];
+		BitSet bits = new BitSet(bf.length);
 		
-		for (int i = 0; i<ba.length; i++){
-			ba[i]=0;
+		byte[] ba = new byte[(bits.length() + 7) / 8];
+		
+		for (int i = 0; i<bf.length; i++){
+			bits.clear(i); //makes the bitset to 0
 		}
-		int count = 0;
-		int sum=0;
-		for (int i = 0; i<bf.length; i++){ //bf.length = bitfield*8
+	//	int count = 0;
+	//	int sum=0;
+		for (int i=0; i<bits.length(); i++) {
+	        if (bits.get(i)) {
+	            ba[ba.length-i/8-1] |= 1<<(i%8);
+	        }
+	    }
+		
+		/*for (int i = 0; i<bf.length; i++){ //bf.length = bitfield*8
 			//byte[] bits = new byte[]({byte) (bf[i]?1:0));
 			count++;
 			if(bf[i] == true){
+				System.out.println("Sum: "+ sum);
 				sum= sum + (int)Math.pow(2,7-(i%8));
+				System.out.println("Sum2: "+ sum);
 				if(count == 8) {
 					ba[i/8] = (byte)sum;
 					System.out.println("Sum: "+ sum);
@@ -40,7 +52,7 @@ public class FileChunks {
 					count = 1;
 				}
 			}
-		}
+		}*/
 		return ba;
 	}
 	

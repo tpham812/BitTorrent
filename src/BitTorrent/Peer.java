@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 
 public class Peer implements Runnable{ 
 
@@ -29,11 +30,11 @@ public class Peer implements Runnable{
 	public boolean[] boolBitField;
 	public TorrentInfo torrentI;
 	/**Array of chunks to be stored*/
-    private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
-    /**Used to avoid duplicate chunks by storing in this array*/
-    private ByteBuffer[] chunksHashes; 
-    boolean[] boolhaveChunks;
-    boolean[] peerChunks;
+	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+	/**Used to avoid duplicate chunks by storing in this array*/
+	private ByteBuffer[] chunksHashes; 
+	boolean[] boolhaveChunks;
+	boolean[] peerChunks;
 
 	/**Socket connection to the peer*/
 	public Socket socket;
@@ -42,16 +43,19 @@ public class Peer implements Runnable{
 	protected final byte[] eightZeros = new byte[]{'0','0','0','0','0','0','0','0'};
 
 
+
 	public Peer(String ip, byte[] id, int port) throws IOException {
 		this.port = port;
 		this.ip = ip;
 		this.id = id;
+		this.ourID = ConnectToTracker.ourPeerID;
 		this.torrentI = ConnectToTracker.torrentI;
 		this.stopThread = false;
 		this.boolhaveChunks= new boolean[FileChunks.ourBitField.length];
 		for (int i = 0; i<boolhaveChunks.length;i++){
 			boolhaveChunks[i] = FileChunks.ourBitField[i];
 		}
+		
 		this.peerChunks = boolBitField;
 		done=false;
 	}
@@ -177,6 +181,16 @@ public class Peer implements Runnable{
 	        closeConnection();*/
 		return;
 	}
+	/**sends interested message*/
+	public void sendInterested() throws IOException{
+		Message interested = new Message(1,(byte)2); /**create interested message*/
+		System.out.println("Writing message to peer.");
+		os.write(interested.message);
+		os.flush();/**push message to stream*/
+		System.out.println("Finished writing message to peer.");
+	}
+	
+	
 	/***
 	 * Requests the piece
 	 * @param index integer specifying the requested length
@@ -366,8 +380,13 @@ public class Peer implements Runnable{
 			closeConnection();
 			return false;
 		}
-		
+
 		Message bitfieldMsg = new Message(1, (byte) 5);
+		System.out.println("Piecehash.length"+ConnectToTracker.torrentI.piece_hashes.length);
+		byte[] temp = new byte[FileChunks.booleanToByteBitField(FileChunks.ourBitField).length];
+		for (int as = 0 ; as< temp.length; as++){
+			System.out.println(temp[as]);
+		}
 		bitfieldMsg.setPayload(-1, -1, -1, FileChunks.booleanToByteBitField(FileChunks.ourBitField));
 		System.out.println("Sending bitfield message to peer.");
 		os.write(bitfieldMsg.message);
@@ -380,15 +399,18 @@ public class Peer implements Runnable{
 	/** Get bitfield from peer */
 	/** If wrong bit field size make bitfield null 
 	 * @throws IOException */
-	public void getBitField() throws IOException {
+	public void getBitField(byte read) throws IOException {
 		System.out.println("Reading message from peer.");
-		int read = readMsg();
+		System.out.println(read);
 		System.out.println("Finished reading message from peer.");
 		bitField = new byte[is.available()];
+	
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
 			if (read==5){
 				is.readFully(bitField); /**get rid of bit field*/
-				if(ConnectToTracker.torrentI.piece_hashes.length != bitField.length){
+				BitSet bits = new BitSet(ConnectToTracker.torrentI.piece_hashes.length);
+				byte[] ba = new byte[(bits.length() + 7) / 8];
+				if(ba.length != bitField.length){
 					/**the number of chunks = the length of the bitField!!*/
 					System.out.println("The peer is not sending us the correct length bitfield");
 					this.boolBitField=null;
@@ -441,7 +463,7 @@ public class Peer implements Runnable{
 			return id;
 		case 5: //bitfield = do nothing
 			//upload peer desides to choke or unchoke
-			getBitField();
+			getBitField(id);
 			return id;
 		case 6: //request = //go to upload peer's upload piece
 			index = is.readInt();
@@ -551,7 +573,9 @@ public class Peer implements Runnable{
 						Thread.sleep(30000);
 					}
 				}
-				readMsg();
+				else {
+					readMsg();
+					}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
