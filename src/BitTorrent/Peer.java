@@ -89,8 +89,10 @@ public class Peer implements Runnable{
 	}
 
 	/**
-	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
-	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id.
+	 * Upload a piece to peer after a request message.
+	 * @param length requeeted length
+	 * @param index piece index 
+	 * @param begin byte offset to begin
 	 */
 	public void upload(int length, int index, int begin) throws IOException{
 
@@ -100,7 +102,7 @@ public class Peer implements Runnable{
 		long endTime;
 		int fileLength = ConnectToTracker.torrentI.piece_hashes.length;
 		int pieceLength = ConnectToTracker.torrentI.piece_length;
-		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); //Is this correct?! 
+		int lastPieceLength = pieceLength - ((fileLength - 1)*pieceLength); 
 		int lastPieceIndex = fileLength - 1;
 
 		if(FileChunks.ourBitField[index] == true){
@@ -311,6 +313,7 @@ public class Peer implements Runnable{
 	/**
 	 * Makes sure the chunk given is not already present in the Hashes array 
 	 * This helps avoid duplicate chunks.
+	 * @param chunkHash chunks
 	 * */
 	private boolean alreadyInArray(byte[] chunkHash) {
 		for (int i = 0; i<chunksHashes.length; i++){
@@ -323,6 +326,8 @@ public class Peer implements Runnable{
 
 	/**
 	 * Checks if the byte arrays are equal and returns true if they are.
+	 * @param array chunks we have
+	 * @param chunkHash chunks we temporary have
 	 * */
 	private boolean areEqual(byte[] array, byte[] chunkHash) {
 		if (array.length!=chunkHash.length){

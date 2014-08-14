@@ -17,7 +17,8 @@ public class Control {
 	boolean gotEntireBitField = false;
 	
 	/**
-	 * Finds the perfect subset of peers to get the entire file with the rarest first prefered.
+	 * Finds the perfect subset of peers to get the entire file with the rarest first preferred.
+	 * @return returns true if entrireBitField has been found from peers, false if not
 	 */
 	public boolean startPeers() {
 		findList();
@@ -26,7 +27,7 @@ public class Control {
 
 
 	/**
-	 * makes a list of subset of peers with bitfields adding up to the entire file with rarest peers first
+	 * Makes a list of subset of peers with bitfields adding up to the entire file with rarest peers first
 	 **/
 	private void findList() {
 		List<Peer> subset= PeerConnectionsInfo.subsetDPeers;
@@ -47,7 +48,8 @@ public class Control {
 
 	}
 
-	/**Makes a subset list based on the rarest pieces first.
+	/**
+	 * Makes a subset list based on the rarest pieces first.
 	 * @param pci peer connections info that holds the peers and their info
 	 * @param subset list of peers needed for download
 	 * @param bfDS number of peers that have each chunk at that index
@@ -167,7 +169,9 @@ public class Control {
 	/**
 	 * Gets the list of peers and verifies the ones we need to open the connection and get hte bitfield
 	 * the list is from the tracker.
-	 * */
+	 * @param List list of all peers retieved from tracker 
+	 * @return true if desired peerIp is found, false if not
+	 **/
 	public boolean extractPeers(ArrayList list) throws IOException {
 
 		HashMap peer_Map = null;
@@ -203,6 +207,7 @@ public class Control {
 	/**
 	 * Gets the minimum time interval to update tracker at.
 	 * @param reponse the reponse of the tracker
+	 * @return returns tracker interval
 	 **/
 	public int getTrackerInterval(HashMap response) {
 

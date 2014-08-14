@@ -23,7 +23,8 @@ public class FileChunks {
 
 	
 	/**
-	 * COnverts the boolean bit field to a byte array for upload peer.
+	 * Converts the boolean bit field to a byte array for upload peer.
+	 * @param bf bit filed array to be converted to boolean array
 	 * @return returns byte array representation of the boolean array
 	 **/
 	public static byte[] booleanToByteBitField(boolean [] bf){
@@ -44,6 +45,7 @@ public class FileChunks {
 	
 	/**
 	 * Saves the chunks downloaded to the output file specified by the user's argument.
+	 * @throws IOException
 	 * */
 	public static void saveToFile() throws IOException {
 		/**Final file that is output*/

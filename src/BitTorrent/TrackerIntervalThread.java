@@ -1,5 +1,10 @@
 package BitTorrent;
 
+/**
+ * This class implements Runnable which is a thread to update information to tracker
+ * @author Amulya Uppala, Truong Pham, Jewel Lim
+ *
+ */
 public class TrackerIntervalThread implements Runnable {
 
 	private boolean end;
@@ -18,10 +23,10 @@ public class TrackerIntervalThread implements Runnable {
 		
 		while(!end) {
 			try {
-				Thread.sleep(seconds * 1000);
-				//tracker interval method here 
+				Thread.sleep(seconds * seconds);
+			
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+			
 				e.printStackTrace();
 			}
 		}

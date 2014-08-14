@@ -80,10 +80,7 @@ public class Message {
 			break;
 		default: break;
 		}
-	}
-	
-	
-	
+	}	
 
 	/**
 	 * @param Index integer specifying the zero-based piece index
