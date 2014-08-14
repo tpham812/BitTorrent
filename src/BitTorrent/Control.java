@@ -103,43 +103,7 @@ public class Control {
 	 */
 
 
-	public void unchoke(Peer peer) throws IOException{
-
-
-		//read message from peer to see if they are interested.
-		int msgfrPeer = peer.readMessage();
-		if (msgfrPeer == Message.MSG_INTERESTED){
-			System.out.println("Peer is interested.");
-			//If we have less than 3 downloading peers, let this peer connect.			
-			if(PeerConnectionsInfo.unchokedPeers.size() < 3){
-				PeerConnectionsInfo.unchokedPeers.add(peer);
-				System.out.println("Peer is unchoked.");
-				//If we are already connected to six people who are uploading from us, keep peer choked.
-			} else if (PeerConnectionsInfo.uploadConnections > 6){
-				PeerConnectionsInfo.chokedPeers.add(peer);
-				System.out.println("Peer is choked.");
-				randomUnchoke();
-				//read message to see if they are have messages.
-			} else {
-				randomUnchoke();
-				int msgfrPeer2 = peer.readMessage();  		
-				if(msgfrPeer2 == Message.MSG_HAVE || msgfrPeer2 == Message.MSG_BITFIELD){
-					PeerConnectionsInfo.unchokedPeers.add(peer);
-					System.out.println("Peer has something to share! Peer is unchoked.");					
-				}else {
-					PeerConnectionsInfo.chokedPeers.add(peer);
-					System.out.println("Peer has nothing to share. Peer is choked");
-				}
-
-			}
-		} else{
-			peer.closeConnection();
-			//peer is uninterested; we did not receive an interested 
-
-
-
-		}
-	}
+	
 
 	/** This method implements the optimistic unchoke functionality.
 	 *  When the 30 second timer is up, it chooses the unchoked peer
@@ -147,7 +111,7 @@ public class Control {
 	 *  choked peer as the optimistic choke.  
 	 */
 
-	public void randomUnchoke(){
+	public static void randomUnchoke(){
 
 		Peer optimisticUnchoke;
 		Peer chokedPeer = null;

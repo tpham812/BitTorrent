@@ -8,8 +8,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Peer { 
-	
+public class Peer implements Runnable{ 
+
+	private boolean stopThread;
 	boolean isChoked;
 	public double throughput;
 	public int port;
@@ -33,8 +34,9 @@ public class Peer {
 		this.ip = ip;
 		this.id = id;
 		this.torrentI = ConnectToTracker.torrentI;
+		this.stopThread = false;
 	}
-	
+
 	/**
 	 * Handshake with peer by sending hand shake message and receiving handshake message back from peer. 
 	 * Verify if the info hash peer sends back is the same and if the their id is the same as tracker given id
@@ -115,7 +117,7 @@ public class Peer {
 		System.out.println("finished handshake.");
 		return true;
 	}
-	
+
 	/** Get bitfield from peer */
 	/** If wrong bit field size make bitfield null 
 	 * @throws IOException */
@@ -137,17 +139,19 @@ public class Peer {
 				this.boolBitField=null;
 			}
 		}
-		
+
 		this.boolBitField = toBooleanArray(bitField);
 
 	}
+
+
 	/**
 	 * Read in message from peer which are formatted based on message type.
 	 * We need id of the message to identify what type of message was sent. 
 	 * @return message byte as int is returned 
 	 * @throws IOException
 	 */
-	public byte readMessage() throws IOException {
+	public byte readMsg() throws IOException {
 
 		/**Read in message*/
 		int msgLength = is.readInt();
@@ -155,36 +159,54 @@ public class Peer {
 		byte id = is.readByte();
 
 		/**keep-alive*/
-		if(msgLength == 0){
+		if(msgLength == 0){ //do nothing!!!!  but keep this here!
 			return -1;
 		}
 		switch(id){
-		case 0://choked
+		case 0://choked = download peer handles gotChocked
 			System.out.println("Choked on ip: "+ip+" on port: "+port);
 			gotChoked(); 
 			if (isChoked==true){
 				return -2;
 			}
-		case 1://unchoked
+		case 1://unchoked  = then we can request a piece if we unchoke
 			isChoked=false;
 			return id;
-		case 7: //piece
+		case 2: //intereseted / go to upload peer for choke or unchoke 
+
+			return id;
+
+		case 3: //not interested = destroy connection via upload peer. 
+			stopThread = true;
+			closeConnection();
+			return id;
+
+		case 4: //have = do nothing
+			return id;
+		case 5: //bitfield = do nothing
+			//upload peer desides to choke or unchoke
+			return id;
+		case 6: //request = //go to upload peer's upload piece
+			
+			return id;
+		case 7: //piece // go to download peer's download piece
 			int index = is.readInt();
-			int begin = is.readInt();	
+			int begin = is.readInt();
+			return id;
 		default: return id;
-		}
+		}	
 	}
-	
+
 	/**
 	 * Deals with choking if peer chokes us. It waits till we get unchoked or will terminate.
 	 * @throws SocketException
 	 */
 	public void gotChoked() throws SocketException{
 		isChoked = true;
-		socket.setSoTimeout(60000); /**time out for 1 minute to get unchoked else destroy connection*/
+		socket.setSoTimeout(120000); /**time out for 1 minute to get unchoked else destroy connection*/
 		do{
 			try {
-				if (readMessage()==1){
+				if (readMsg()==1){
 					System.out.println("Got unchoked before time interval ended.");
 					isChoked=false;
 					return;
@@ -195,13 +217,13 @@ public class Peer {
 			}
 		}while (isChoked==true);
 	}
-	
+
 	/** 
 	 * Converts bitfield byte array to boolean array 
 	 * */
 	public static boolean[] toBooleanArray(byte[] B) {
 		boolean[] bool = new boolean[B.length*8];
-		
+
 		for(int i = 0; i<B.length*8; i++){
 			if ((B[i/8] & (1<<(7-(i%8)))) > 0){
 				bool[i] = true; /**if the shifting of the bit creates a whole multiple of 2 => true*/
@@ -209,18 +231,64 @@ public class Peer {
 		}
 		return bool;
 	}
-	
-	public void closeConnection() {
 
-		System.out.println("Closing socket and data streams.");
-		try {
-			/**Close socket and streams*/
-			socket.close();
-			is.close();
-			os.close();
-		} catch (Exception e) {
-			System.out.println("Error: Could not close data streams!");
-			return;
-		}	
+	public boolean Determinechoke() throws IOException{
+
+		//read message from peer to see if they are interested.
+
+		System.out.println("Peer is interested.");
+		//If we have less than 3 downloading peers, let this peer connect.			
+		if(PeerConnectionsInfo.unchokedPeers.size() < 3){
+			PeerConnectionsInfo.unchokedPeers.add(this);
+			System.out.println("Peer is unchoked.");
+			return true;
+			//If we are already connected to six people who are uploading from us, keep peer choked.
+		} else if (PeerConnectionsInfo.uploadConnections > 6){
+			PeerConnectionsInfo.chokedPeers.add(this);
+			System.out.println("Peer is choked.");
+			Control.randomUnchoke();
+			return false;
+			//read message to see if they are have messages.
+		} else {
+			/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+			Control.randomUnchoke();
+			int msgfrPeer2 = readMsg();  		
+			if(msgfrPeer2 == Message.MSG_HAVE || msgfrPeer2 == Message.MSG_BITFIELD){
+				PeerConnectionsInfo.unchokedPeers.add(this);
+				System.out.println("Peer has something to share! Peer is unchoked.");	
+				return true;
+			}else {
+				PeerConnectionsInfo.chokedPeers.add(this);
+				System.out.println("Peer has nothing to share. Peer is choked");
+				return false;
+			}
+		}
 	}
-}
+
+		public void closeConnection() {
+
+			System.out.println("Closing socket and data streams.");
+			try {
+				/**Close socket and streams*/
+				socket.close();
+				is.close();
+				os.close();
+			} catch (Exception e) {
+				System.out.println("Error: Could not close data streams!");
+				return;
+			}	
+		}
+
+
+		@Override
+		public void run() {
+
+			while(!stopThread) {
+				try {
+					readMsg();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
