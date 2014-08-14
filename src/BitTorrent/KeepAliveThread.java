@@ -1,6 +1,14 @@
 package BitTorrent;
 
+
 import java.io.IOException;
+
+/**
+ * Keep Alive thread that sends keep alive messages to peer if we are taking long to 
+ * response so they don't close their connection
+ * 
+ * @author Amulya Uppala Truong Pham
+ * */
 
 public class KeepAliveThread implements Runnable {
 
