@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Controls the flow of the main componenets
+ * @author Amulya Uppala
+ * */
 public class Control {
 	boolean gotEntireBitField = false;
 	/**
@@ -49,7 +53,7 @@ public class Control {
 			bf[z]=false;
 		}
 
-		for (int j = 0; j<bfDS.length;j++){ //linear search to find the smallest first
+		for (int j = 0; j<bfDS.length;j++){ //linear search to find the smallest chunk first to order the peers
 			int smallest = Integer.MAX_VALUE;
 			int index = 0;
 			for (int i = 0; i<bfDS.length;i++){
@@ -71,7 +75,7 @@ public class Control {
 		}
 
 	}
-
+	/**Checks if the person is already in the bitfield list of peers.*/
 	private boolean inSubset(List<Peer> subset, bitFieldDS bfDS) {
 		for (int i = 0 ; i< bfDS.lp.size(); i++){
 			if (subset.contains(bfDS.lp.get(i))){
@@ -133,7 +137,10 @@ public class Control {
 		PeerConnectionsInfo.chokedPeers.remove(optimisticUnchoke);
 	}
 
-
+	/**
+	 * FOr every peer in the list of peers we want to connect to, send an interested message
+	 * stop the keep alive messages and start the thread. 
+	 * */
 	public void makeThreads() {
 		Peer temp;
 		Thread thread;
@@ -148,7 +155,10 @@ public class Control {
 			} 
 		}
 	}
-
+	/**
+	 * Gets the list of peers and verifies the ones we need to open the connection and get hte bitfield
+	 * the list is from the tracker.
+	 * */
 	public boolean extractPeers(ArrayList list) throws IOException {
 
 		HashMap peer_Map = null;
@@ -168,24 +178,26 @@ public class Control {
 				Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 				if(temp.openConnection()){
 					//System.out.println("IP: "+ peerIP+ "port: "+ peerPort);
-					int len = temp.is.readInt();
+					int len = temp.is.readInt(); //for bitfield extraction
 					byte read = temp.is.readByte();
-					temp.getBitField(read); 
-					if(temp.boolBitField.length==0){
+					temp.getBitField(read);  //gets bitfield message to verify
+					if(temp.boolBitField.length==0){ //not valid so discard
 						System.out.println("OH NO!! SIZE 0");
 					}
-					if(temp.boolBitField!=null){
+					if(temp.boolBitField!=null){ 
 						PeerConnectionsInfo.peers.put(temp.boolBitField, temp);
-						PeerConnectionsInfo.downloadPeers.add(temp);
-					}else{
-						temp.closeConnection();
+						PeerConnectionsInfo.downloadPeers.add(temp); 
+					}else{//have message or was not valid so discard peer from potential list and don't put into subset.
+						temp.closeConnection(); //if not valid then close connection. 
 					}
 				}
 			}
 		}
 		return found;
 	}
-
+	/**
+	 * gets the minimum time interval to update tracker at.
+	 * */
 	public int getTrackerInterval(HashMap response) {
 
 		int trackInterval;
@@ -201,6 +213,9 @@ public class Control {
 		return trackInterval;
 	}
 
+	/**
+	 * closes all connections to the peers.
+	 * */
 	public void closeAllConnections() {
 		for (int j = 0; j< PeerConnectionsInfo.downloadPeers.size();j++){
 			PeerConnectionsInfo.downloadPeers.get(j).closeConnection();

@@ -13,28 +13,28 @@ import java.util.BitSet;
 
 public class Peer implements Runnable{ 
 
-	private boolean stopThread;
-	boolean isChoked;
-	public double throughput;
-	public int port;
-	public byte[] id;
-	public String ip;
-	int currIndex;
-	int currBegin;
-	int currBlock;
-	boolean done;
-	public DataOutputStream os;
-	public DataInputStream is;
-	public byte[] ourID;
-	public byte[] bitField;
-	public boolean[] boolBitField;
-	public TorrentInfo torrentI;
-	/**Array of chunks to be stored*/
+	private boolean stopThread; //controls if the thread is halted or not
+	boolean isChoked; //we are choked so we cannot continue
+	public double throughput; //
+	public int port; //port number of the peer
+	public byte[] id; //id of the peer
+	public String ip; //ip address of the peer
+	int currIndex; //current index of the piece we are downloading
+	int currBegin; //beginning byte index of the piece we are donwloading
+	int currBlock; //block we are downloading
+	boolean done; //boolean to determine if we are done with downloading all pieces
+	public DataOutputStream os; //output stream to write to the peer
+	public DataInputStream is; //input stream coming to us
+	public byte[] ourID; //our byte id
+	public byte[] bitField; //the bitfield of the peer
+	public boolean[] boolBitField; //boolean array of the chunks the peer has
+	public TorrentInfo torrentI; //torrentI file corresponding to the file
+	/**Array of chunks to be stored*/ 
 	private ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Used to avoid duplicate chunks by storing in this array*/
 	private ByteBuffer[] chunksHashes; 
-	boolean[] boolhaveChunks;
-	boolean[] peerChunks;
+	boolean[] boolhaveChunks; //chunks we have acquired already but keep temp so we can modify 
+	boolean[] peerChunks; //chunks the peer has but we keep temporarily so we can modify
 
 	/**Socket connection to the peer*/
 	public Socket socket;
@@ -98,7 +98,10 @@ public class Peer implements Runnable{
 			}
 		}
 	}
-
+	/**
+	 * Request the piece from the peer by looping through the array of 
+	 * things we don't have and the things they have. then we can create the message and send it to them
+	 * */
 	public void requestPiece() throws IOException, InterruptedException {
 		System.out.println("Requesting Pieces!!!");
 		/**keeps track of bytes*/
@@ -110,7 +113,7 @@ public class Peer implements Runnable{
 		int read;
 
 		System.out.println("Reading message from peer.");
-		read = readMsg();
+		read = readMsg(); //check if we get chocked or unchoked.  
 		System.out.println("Finished reading message from peer.");
 		if (read==1){
 			System.out.println("Unchoked. Downloading chunks.");
@@ -120,7 +123,7 @@ public class Peer implements Runnable{
 			return;
 		}
 
-		
+
 
 		System.out.println("downloading chunks.");
 		/**Message to  for what block to send.*/
@@ -138,7 +141,7 @@ public class Peer implements Runnable{
 					}else{
 						index = torrentI.piece_length;
 					}
-				}
+				}//last piece may have different size so calculate that. 
 				begin = ConnectToTracker.torrentI.piece_length*block;
 
 				System.out.println("index, begin, block: "+index+","+begin+","+block);
@@ -181,7 +184,9 @@ public class Peer implements Runnable{
 	        closeConnection();*/
 		return;
 	}
-	/**sends interested message*/
+	/**
+	 * sends interested message to send to peer so that we can get unchoked
+	 * */
 	public void sendInterested() throws IOException{
 		Message interested = new Message(1,(byte)2); /**create interested message*/
 		System.out.println("Writing message to peer.");
@@ -189,13 +194,10 @@ public class Peer implements Runnable{
 		os.flush();/**push message to stream*/
 		System.out.println("Finished writing message to peer.");
 	}
-	
-	
+
+
 	/***
-	 * Requests the piece
-	 * @param index integer specifying the requested length
-	 * @param begin integer specifying the zero-based byte offset within the piece 
-	 * @param block integer specifying the zero-based piece index
+	 * Downloads the piece we have requested
 	 * @throws IOException 
 	 */
 	private void downloadPiece() throws IOException {
@@ -205,7 +207,7 @@ public class Peer implements Runnable{
 		byte[] chunk;
 
 		//index and begin
-		int index = is.readInt();
+		int index = is.readInt(); //the index of the piece and the begin byte index of the piece 
 		int tempBegin = is.readInt();
 
 		if ((index!=this.currBlock)||(tempBegin!=this.currBegin)){
@@ -214,7 +216,7 @@ public class Peer implements Runnable{
 		}
 		chunk = new byte[this.currIndex];
 
-		for (int m = 0 ; m<index;m++){
+		for (int m = 0 ; m<index;m++){ //chunk being read in
 			chunk[m]=is.readByte(); 
 		}/**read in chunk*/
 
@@ -225,17 +227,19 @@ public class Peer implements Runnable{
 			/**ISSUES HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 		}else{
 			/**add the chunk if correct*/
-			boolhaveChunks[currBlock]= true;
+			boolhaveChunks[currBlock]= true; //update our information and update the tracker
 			this.chunksHashes[currBlock] = ByteBuffer.wrap(chunkHash);
 			this.chunks.add(chunk); /**add to array*/
 			ConnectToTracker.updateAmounts(chunk.length);
 			ConnectToTracker.sendMessageToTracker(null, null);
-			have = new Message(5,(byte)4);
+			have = new Message(5,(byte)4); //send have message to all peers.
 			have.setPayload(index, currBegin, currBlock, null);
 			writeHavetoAllPeers(have);
 		}
 	}
-
+	/**
+	 * make sure the SHa-1 hashes match and that is it not already in the array before. 
+	 * */
 	private int verify(int block, byte[] chunk, byte[] chunkHash) {
 		int verify = 1; 
 		byte[] trackerHash = torrentI.piece_hashes[block].array();
@@ -274,7 +278,7 @@ public class Peer implements Runnable{
 
 		for (int i = 0; i<PeerConnectionsInfo.subsetDPeers.size();i++){
 			try {
-				PeerConnectionsInfo.subsetDPeers.get(i).os.write(have.message);
+				PeerConnectionsInfo.subsetDPeers.get(i).os.write(have.message); //the current peers we are downloading from and have threads wil receive have messages
 				PeerConnectionsInfo.subsetDPeers.get(i).os.flush();
 			} catch (IOException e) {
 				System.out.println("Error: Cannot send have message to peer");
@@ -309,7 +313,10 @@ public class Peer implements Runnable{
 		}
 		return true;
 	}
-
+	
+	/**
+	 * Handshake and make sure correct responses. then send the bitfield we have.
+	 * */
 	public boolean openConnection() throws IOException{
 
 		boolean peerInfoGood = true;
@@ -383,7 +390,7 @@ public class Peer implements Runnable{
 			closeConnection();
 			return false;
 		}
-
+		//Send our bitfield as message to this peer.
 		Message bitfieldMsg = new Message(1, (byte) 5);
 		System.out.println("Piecehash.length"+ConnectToTracker.torrentI.piece_hashes.length);
 		byte[] temp = new byte[FileChunks.booleanToByteBitField(FileChunks.ourBitField).length];
@@ -394,7 +401,7 @@ public class Peer implements Runnable{
 		System.out.println("Sending bitfield message to peer.");
 		os.write(bitfieldMsg.message);
 		os.flush();/**push message to stream*/
-		
+
 		System.out.println("finished handshake.");
 		return true;
 	}
@@ -413,19 +420,19 @@ public class Peer implements Runnable{
 				is.readFully(bitField); /**get rid of bit field*/
 				System.out.println("bitfield length: "+bitField.length);
 				byte[] ba = new byte[(ConnectToTracker.torrentI.piece_hashes.length + 7) / 8];
-
-				if(ba.length != bitField.length){/**the number of chunks = the length of the bitField!!*/
+				/**the number of chunks = the length of the bitField!!*/
+				if(ba.length != bitField.length){
 					System.out.println("The peer is not sending us the correct length bitfield");
 					this.boolBitField=null;
 					return;
 				}
-			}else{
+			}else{ //if we get a have message then we canont do anything => bitfield is null
 				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
 				this.boolBitField=null;
 				return;
 			}
 		}
-
+		//copy the array into the intial stuff we have for calculating the peer bitfields and ours.
 		boolean[] tempBool = toBooleanArray(bitField);
 		this.boolBitField = new boolean[tempBool.length];
 		for (int i = 0; i<tempBool.length; i++){
@@ -445,7 +452,7 @@ public class Peer implements Runnable{
 	 * @throws IOException
 	 */
 	public byte readMsg() throws IOException {
-		
+
 		int length, begin, index;
 		/**Read in message*/
 		int msgLength = is.readInt();
@@ -520,7 +527,7 @@ public class Peer implements Runnable{
 	public static boolean[] toBooleanArray(byte[] B) {
 		boolean[] bool = new boolean[B.length*8];
 
-		for(int i = 0; i<B.length*8; i++){
+		for(int i = 0; i<B.length*8; i++){ //turn bitfield into boolean array 
 			if ((B[i/8] & (1<<(7-(i%8)))) > 0){
 				bool[i] = true; /**if the shifting of the bit creates a whole multiple of 2 => true*/
 			}
@@ -560,7 +567,9 @@ public class Peer implements Runnable{
 			}
 		}
 	}
-
+	/**
+	 * closes the socket and streams.
+	 * */
 	public void closeConnection() {
 
 		System.out.println("Closing socket and data streams.");
@@ -576,7 +585,9 @@ public class Peer implements Runnable{
 	}
 
 
-	@Override
+	/**
+	 * thread run to do everything.
+	 * */
 	public void run() {
 
 		while(!stopThread) {
@@ -589,7 +600,7 @@ public class Peer implements Runnable{
 				}
 				else {
 					readMsg();
-					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
