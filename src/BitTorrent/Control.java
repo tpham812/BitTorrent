@@ -152,13 +152,15 @@ public class Control {
 		String peerID ="", peerIP = "";
 		int peerPort = 0;
 		boolean found = false;
-
+		//System.out.println(list.size());
 		for(int i = 0; i < list.size(); i++){
 			peer_Map = (HashMap)list.get(i);
 			peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
 			peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
-			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);	
-			if((peerIP.equalsIgnoreCase("128.6.5.131")) || (peerIP.equalsIgnoreCase("128.6.5.130")) ) {
+			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);
+			System.out.println(peerIP);
+			if((peerIP.equalsIgnoreCase("128.6.171.131")) || (peerIP.equalsIgnoreCase("128.6.171.130")) ) {
+				
 				found = true;
 				Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 				if(temp.openConnection()){

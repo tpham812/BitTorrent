@@ -8,19 +8,13 @@ import java.util.ArrayList;
 
 public class FileChunks {
 
-	/**Final file that is output*/
-	private static FileOutputStream fileoutput;
+
 	/**Final name of the output file as given as the second argument to the program*/
-	private static String fileOutArg;
+	private static String fileOutArg = ConnectToTracker.fileoutArg;
 	/**Array of chunks to be stored*/
 	public static ArrayList<byte[]> chunks = new ArrayList<byte[]>();
 	/**Boolean version of our bitfield which will be the most up to date by the download peer*/
-	public static boolean[] ourBitField;
-	
-	
-	public FileChunks(String fileName) {
-		this.fileOutArg = fileName;
-	}
+	public static boolean[] ourBitField = new boolean[ConnectToTracker.torrentI.piece_hashes.length];
 
 	
 	/**
@@ -54,16 +48,20 @@ public class FileChunks {
 	 * Saves the chunks downloaded to the output file specified by the user's argument.
 	 * */
 	public static void saveToFile() throws IOException {
+		/**Final file that is output*/
+		FileOutputStream  fileoutput;
 		System.out.println("Writing to File.");
 		try {
 			fileoutput = new FileOutputStream(new File(fileOutArg));
+			for (int i = 0; i<chunks.size();i++){ /**writes all chunks to file*/
+				fileoutput.write(chunks.get(i));
+			}
+			fileoutput.close();
+			System.out.println("Done Writing to File.");
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: could not open file to save data to.");
 		}
-		for (int i = 0; i<chunks.size();i++){ /**writes all chunks to file*/
-			fileoutput.write(chunks.get(i));
-		}
-		fileoutput.close();
-		System.out.println("Done Writing to File.");
+		
+	
 	}
 }
