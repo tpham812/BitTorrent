@@ -55,9 +55,9 @@ public class Peer implements Runnable{
 		for (int i = 0; i<boolhaveChunks.length;i++){
 			boolhaveChunks[i] = FileChunks.ourBitField[i];
 		}
-		
-		this.peerChunks = boolBitField;
+
 		done=false;
+		this.chunksHashes= new ByteBuffer[torrentI.piece_hashes.length];
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class Peer implements Runnable{
 			return;
 		}
 
-		this.chunksHashes= new ByteBuffer[torrentI.piece_hashes.length];
+		
 
 		System.out.println("downloading chunks.");
 		/**Message to  for what block to send.*/
@@ -421,7 +421,16 @@ public class Peer implements Runnable{
 				return;
 			}
 		}
-		this.boolBitField = toBooleanArray(bitField);
+
+		boolean[] tempBool = toBooleanArray(bitField);
+		this.boolBitField = new boolean[tempBool.length];
+		for (int i = 0; i<tempBool.length; i++){
+			this.boolBitField[i]=tempBool[i];
+		}
+		this.peerChunks = new boolean[boolBitField.length];
+		for(int z = 0; z<boolBitField.length; z++){
+			this.peerChunks[z]=boolBitField[z];
+		}
 	}
 
 
