@@ -116,7 +116,7 @@ public class Control {
 	 *  choked peer as the optimistic choke.  
 	 */
 
-	/**public static void randomUnchoke(){
+	public static void randomUnchoke(){
 
 		Peer optimisticUnchoke;
 		Peer chokedPeer = null;
@@ -126,7 +126,7 @@ public class Control {
 
 
 		for (int i = 0; i < PeerConnectionsInfo.unchokedPeers.size(); i++){
-			// compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer); 
+			/** compare throughput, lowest: PeersConnectionsInfo.chokedPeers.add(peer); */
 			currTP = PeerConnectionsInfo.unchokedPeers.get(i).throughput;
 			if(currTP < leastTP || currTP == leastTP){
 				leastTP = currTP;
@@ -138,12 +138,12 @@ public class Control {
 		PeerConnectionsInfo.chokedPeers.add(chokedPeer);
 
 
-		// randomly select a peer from PeerConnectionInfo.chokedPeers 
+		/** randomly select a peer from PeerConnectionInfo.chokedPeers */
 		Random r = new Random();
 		optimisticUnchoke = PeerConnectionsInfo.chokedPeers.get(r.nextInt(PeerConnectionsInfo.chokedPeers.size()));
 		PeerConnectionsInfo.unchokedPeers.add(optimisticUnchoke);
 		PeerConnectionsInfo.chokedPeers.remove(optimisticUnchoke);
-	}*/
+	}
 
 	/**
 	 * For every peer in the list of peers we want to connect to, send an interested message

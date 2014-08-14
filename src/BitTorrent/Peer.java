@@ -577,12 +577,12 @@ public class Peer implements Runnable{
 		} else if (PeerConnectionsInfo.uploadConnections > 6){
 			PeerConnectionsInfo.chokedPeers.add(this);
 			System.out.println("Peer is choked.");
-			Control.randomUnchoke();
+			/** Control.randomUnchoke(); */
 			return false;
 			/** Read message to see if they are have messages. */
 		} else {
 			/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-			Control.randomUnchoke();
+			/** Control.randomUnchoke(); */
 			int msgfrPeer2 = readMsg();  		
 			if(msgfrPeer2 == Message.MSG_HAVE || msgfrPeer2 == Message.MSG_BITFIELD){
 				PeerConnectionsInfo.unchokedPeers.add(this);
