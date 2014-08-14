@@ -107,6 +107,7 @@ public class RUBTClient {
 			}
 		}while(!found);
 		ctrl.startPeers();
+		ctrl.makeThreads();
 		FileChunks.saveToFile();
 		
 		try {

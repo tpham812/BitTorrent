@@ -134,7 +134,7 @@ public class Control {
 	}
 
 
-	public void makeThreads(FileChunks fc) {
+	public void makeThreads() {
 		Peer temp;
 		Thread thread;
 		for(int i = 0; i< PeerConnectionsInfo.subsetDPeers.size(); i++){

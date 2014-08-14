@@ -100,7 +100,7 @@ public class Peer implements Runnable{
 	}
 
 	public void requestPiece() throws IOException, InterruptedException {
-
+		System.out.println("Requesting Pieces!!!");
 		/**keeps track of bytes*/
 		int begin = 0;
 		/**Keeps track of current block number*/
@@ -432,7 +432,7 @@ public class Peer implements Runnable{
 	 * @throws IOException
 	 */
 	public byte readMsg() throws IOException {
-
+		
 		int length, begin, index;
 		/**Read in message*/
 		int msgLength = is.readInt();
