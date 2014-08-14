@@ -23,17 +23,17 @@ public class Control {
 		List<Peer> subset= PeerConnectionsInfo.subsetDPeers;
 		int numChunks = ConnectToTracker.torrentI.piece_hashes.length;
 		bitFieldDS[] bfDS = new bitFieldDS[numChunks];
-
+		bitFieldDS node = new bitFieldDS();
 		/**for each chunk add up the number of peers that have that bit field to true*/
 		for (int j = 0; j<numChunks; j++){ 
 			for (int i = 0; i<PeerConnectionsInfo.downloadPeers.size();i++){
 				if(PeerConnectionsInfo.downloadPeers.get(i).boolBitField[j]==true){
+					bfDS[j]= node;
 					bfDS[j].sum++;
 					bfDS[j].lp.add(PeerConnectionsInfo.downloadPeers.get(i));
 				}
 			}
 		}
-
 		makeList(subset,bfDS);
 
 	}
@@ -161,13 +161,13 @@ public class Control {
 			peerIP = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_IP)).array());
 			peerID = new String(((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array());
 			peerPort = (int)peer_Map.get(ConnectToTracker.KEY_PEER_PORT);
-			System.out.println(peerIP);
+			//System.out.println(peerIP);
 			if((peerIP.equalsIgnoreCase("128.6.171.131")) || (peerIP.equalsIgnoreCase("128.6.171.130")) ) {
 
 				found = true;
 				Peer temp = new Peer(peerIP, ((ByteBuffer)peer_Map.get(ConnectToTracker.KEY_PEER_ID)).array(), peerPort);
 				if(temp.openConnection()){
-					System.out.println("IP: "+ peerIP+ "port: "+ peerPort);
+					//System.out.println("IP: "+ peerIP+ "port: "+ peerPort);
 					int len = temp.is.readInt();
 					byte read = temp.is.readByte();
 					temp.getBitField(read); 

@@ -401,23 +401,24 @@ public class Peer implements Runnable{
 	 * @throws IOException */
 	public void getBitField(byte read) throws IOException {
 		System.out.println("Reading message from peer.");
-		System.out.println(read);
+		//System.out.println(read);
 		System.out.println("Finished reading message from peer.");
 		bitField = new byte[is.available()];
-	
+		//System.out.println("Len of bitfield "+ bitField.length);
 		if ((read==5)||(read==4)){ /**have or bitfield message being sent. */
 			if (read==5){
 				is.readFully(bitField); /**get rid of bit field*/
-				BitSet bits = new BitSet(ConnectToTracker.torrentI.piece_hashes.length);
-				byte[] ba = new byte[(bits.length() + 7) / 8];
-				if(ba.length != bitField.length){
-					/**the number of chunks = the length of the bitField!!*/
+				byte[] ba = new byte[(ConnectToTracker.torrentI.piece_hashes.length + 7) / 8];
+
+				if(ba.length != bitField.length){/**the number of chunks = the length of the bitField!!*/
 					System.out.println("The peer is not sending us the correct length bitfield");
 					this.boolBitField=null;
+					return;
 				}
 			}else{
 				System.out.println("Oh no peer sent have message after handshake instead of bitfield.");
 				this.boolBitField=null;
+				return;
 			}
 		}
 		this.boolBitField = toBooleanArray(bitField);
